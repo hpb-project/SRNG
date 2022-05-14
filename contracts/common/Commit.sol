@@ -5,8 +5,8 @@ struct Commit {
     address     author;
     address     consumer;
     bytes32 	commit;
-    bytes32		random;
+    bytes32		seed;
     uint64 		block;
     bool 		revealed;
-    uint8       status; // 0: not used 1: in subcribe 2: finished
+    uint8       status; // 0: not used 1: in subcribe 2: commiter finished
 }
