@@ -2,6 +2,7 @@ pragma solidity ^0.8.0;
 
 import "../interface/IERC20.sol";
 import "../interface/IConfig.sol";
+import "../interface/IConsumerBase.sol";
 import "../common/Auth.sol";
 import "../common/Commit.sol";
 
@@ -21,7 +22,7 @@ contract CommitReveal is Admin {
 
 	function commit(bytes32 dataHash) public {
 		// todo: add deposit token.
-		
+
 		commits[msg.sender].author = msg.sender;
 		commits[msg.sender].commit = dataHash;
 		commits[msg.sender].block = uint64(block.number);
@@ -33,7 +34,7 @@ contract CommitReveal is Admin {
 
 	event CommitHash(address sender, bytes32 dataHash, uint64 block);
 
-	function reveal(bytes32 original) public {
+	function reveal(bytes32 seed) public {
 		Commit memory info = commits[msg.sender];
 		//make sure it has an commit.
 		require(info.block != 0, "CommitReveal::reveal: Have no commit need reveal");
@@ -49,16 +50,23 @@ contract CommitReveal is Admin {
 		commits[msg.sender].revealed=true;
 
 		//require that they can produce the committed hash
-		require(getHash(original)==info.commit,"CommitReveal::reveal: Revealed hash does not match commit");
-		commits[msg.sender].random = original;
-		emit RevealRandom(msg.sender, original);
+		require(getHash(seed)==info.commit,"CommitReveal::reveal: Revealed hash does not match commit");
+		commits[msg.sender].seed = seed;
+		emit RevealSeed(msg.sender, seed);
 		
 		// mint new token for commiter.
 		uint256 reward = config.GetRewards();
 		hrgToken.mint(msg.sender, reward);
+
+		if (info.consumer != address(0)) 
+		{
+			bytes32 random = genRandom(info);
+			IConsumerBase con = IConsumerBase(info.consumer);
+			con.responseRandom(info.commit, random);
+		}
 	}
 
-	event RevealRandom(address sender, bytes32 random);
+	event RevealSeed(address sender, bytes32 seed);
 
 	function getHash(bytes32 data) public view returns(bytes32) {
 		return keccak256(abi.encodePacked(address(this), data));
@@ -66,6 +74,6 @@ contract CommitReveal is Admin {
 
 	function genRandom(Commit memory info) public returns(bytes32) {
 		bytes32 hash = blockhash(info.block);
-		return keccak256(abi.encodePacked(hash, info.random));
+		return keccak256(abi.encodePacked(hash, info.seed));
 	}
 }
