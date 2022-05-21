@@ -1,24 +1,42 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import "./Auth.sol";
+import "../common/Auth.sol";
 
 contract Config is Admin {
     uint256 _rewards = 0.1 ether;
     uint256 _fee = 0.1 ether;
+    uint256 _max_unverify = 10; // max unverified record per committer
+    uint256 _deposit_amount = 100;
     
-    function SetFee(uint256 newfee) public onlyAdmin {
+    function setFee(uint256 newfee) public onlyAdmin {
         _fee = newfee;
     }
 
-    function GetFee() public returns (uint256) {
+    function getFee() public view returns (uint256) {
         return _fee;
     }
 
-    function SetRewards(uint256 reward) public onlyAdmin {
+    function setRewards(uint256 reward) public onlyAdmin {
         _rewards = reward;
     }
 
-    function GetRewards() public returns (uint256) {
+    function getRewards() public view returns (uint256) {
         return _rewards;
+    }
+
+    function setMaxUnverify(uint256 max_unverify) public onlyAdmin {
+        _max_unverify = max_unverify;
+    }
+
+    function getMaxUnverify() public view returns (uint256) {
+        return _max_unverify;
+    }
+
+    function setDepositAmount(uint256 amount) public onlyAdmin {
+        _deposit_amount = amount;
+    }
+
+    function getDepositAmount() public view returns (uint256) {
+        return _deposit_amount;
     }
 }
