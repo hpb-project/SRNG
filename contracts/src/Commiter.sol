@@ -12,10 +12,10 @@ contract CommitReveal is Admin {
 	uint8 public minblocks = 1;
 	uint8 public maxblocks = 200;
 
-	IERC20 hrgToken;
-	IConfig config;
-	IDepositPool tokenPool;
-	IStat  stat;
+	IERC20 			hrgToken;
+	IConfig 		config;
+	IDepositPool 	tokenPool;
+	IStat  			stat;
 	
 	mapping (address => Commit) public commits;
 
@@ -27,8 +27,14 @@ contract CommitReveal is Admin {
 	}
 
 	function commit(bytes32 dataHash) public {
+		uint256 unverified = stat.getUnVerified(msg.sender);
+		uint256 maxunverified = config.getMaxUnverify();
+		require(unverified <= maxunverified, "unverified commit over flow");
+
 		// deposit token.
 		uint256 amount = config.getDepositAmount();
+		uint256 balance = hrgToken.balanceOf(msg.sender);
+		require(balance >= amount, "have no enough token for deposit");
 		tokenPool.deposit(msg.sender, amount);
 
 		commits[msg.sender].author = msg.sender;
@@ -38,6 +44,9 @@ contract CommitReveal is Admin {
 		commits[msg.sender].status = 0;
 		
 		emit CommitHash(msg.sender,commits[msg.sender].commit,commits[msg.sender].block);
+
+		// add unverified
+		stat.addUnVerified(msg.sender);
 	}
 
 	event CommitHash(address sender, bytes32 dataHash, uint64 block);
@@ -66,10 +75,11 @@ contract CommitReveal is Admin {
 		// add stats.
 		stat.addVerifiedCommit(msg.sender);
 
-		// mint new token for commiter.
+		// todo: mint new token for commiter.
 		uint256 reward = config.getRewards();
 		hrgToken.mint(msg.sender, reward);
 
+		// check consume.
 		if (info.consumer != address(0)) 
 		{
 			bytes32 random = genRandom(info);
@@ -81,7 +91,7 @@ contract CommitReveal is Admin {
 			uint256 feeAmount = config.getFee();
 			tokenPool.rewardFee(msg.sender, feeAmount);
 			
-			stat.addConsumedCommit(msg.sender, info.consumer);	
+			stat.addConsumedCommit(msg.sender, info.consumer);
 		}
 		
 		// withdraw token.
