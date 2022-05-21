@@ -10,18 +10,31 @@ contract Stats is Admin {
     mapping(address => uint256) committers; // mapping committer address and valid commit count.
     mapping(address => uint256) consumers;  // mapping consumer address and consumed random count.
     mapping(address => uint256) unverifiedCommit; // mapping committer address and unverified commit count.
-    
+
     uint256 totalCommitters;
     uint256 totalConsumers;
     uint256 totalConsumedCommit;
 
+    function addUnVerified(address committer) public returns (uint256) {
+        unverifiedCommit[committer] = unverifiedCommit[committer] + 1;
+        return unverifiedCommit[committer];
+    }
+
+    function getUnVerified(address committer) public view returns (uint256) {
+        return unverifiedCommit[committer];
+    }
+
     function addVerifiedCommit(address commiter) public {
+        require(unverifiedCommit[commiter] > 0, "have no unverified commit");
+
         if (committers[commiter] == 0) {
             committers[commiter] = 1;
             totalCommitters = totalCommitters + 1;
         } else {
             committers[commiter] = committers[commiter] + 1;
         }
+
+        unverifiedCommit[commiter] = unverifiedCommit[commiter] - 1;
     }
 
     function addConsumedCommit(address commiter, address consumer) public {
