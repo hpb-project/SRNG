@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 import "../interface/IERC20.sol";
 import "../interface/IConfig.sol";
 import "../interface/IConsumerBase.sol";
+import "../interface/IDepositPool.sol";
+import "../interface/IStat.sol";
 import "../common/Auth.sol";
 import "../common/Commit.sol";
 
@@ -12,16 +14,22 @@ contract CommitReveal is Admin {
 
 	IERC20 hrgToken;
 	IConfig config;
-
+	IDepositPool tokenPool;
+	IStat  stat;
+	
 	mapping (address => Commit) public commits;
 
-	function setAddress(address token, address _config) public onlyAdmin {
+	function setAddress(address token, address _config, address _pool, address _stat) public onlyAdmin {
 		hrgToken = IERC20(token);
 		config = IConfig(_config);
+		tokenPool = IDepositPool(_pool);
+		stat = IStat(_stat);
 	}
 
 	function commit(bytes32 dataHash) public {
-		// todo: add deposit token.
+		// deposit token.
+		uint256 amount = config.getDepositAmount();
+		tokenPool.deposit(msg.sender, amount);
 
 		commits[msg.sender].author = msg.sender;
 		commits[msg.sender].commit = dataHash;
@@ -53,9 +61,13 @@ contract CommitReveal is Admin {
 		require(getHash(seed)==info.commit,"CommitReveal::reveal: Revealed hash does not match commit");
 		commits[msg.sender].seed = seed;
 		emit RevealSeed(msg.sender, seed);
-		
+
+
+		// add stats.
+		stat.addVerifiedCommit(msg.sender);
+
 		// mint new token for commiter.
-		uint256 reward = config.GetRewards();
+		uint256 reward = config.getRewards();
 		hrgToken.mint(msg.sender, reward);
 
 		if (info.consumer != address(0)) 
@@ -63,16 +75,28 @@ contract CommitReveal is Admin {
 			bytes32 random = genRandom(info);
 			IConsumerBase con = IConsumerBase(info.consumer);
 			con.responseRandom(info.commit, random);
-		}
-	}
+			emit RandomConsumed(msg.sender, info.consumer, random);
 
+			// reward consumer fee.
+			uint256 feeAmount = config.getFee();
+			tokenPool.rewardFee(msg.sender, feeAmount);
+			
+			stat.addConsumedCommit(msg.sender, info.consumer);	
+		}
+		
+		// withdraw token.
+		uint256 amount = config.getDepositAmount();
+		tokenPool.withdraw(msg.sender, amount);
+
+	}
+	event RandomConsumed(address commiter, address consumer, bytes32 random);
 	event RevealSeed(address sender, bytes32 seed);
 
 	function getHash(bytes32 data) public view returns(bytes32) {
 		return keccak256(abi.encodePacked(address(this), data));
 	}
 
-	function genRandom(Commit memory info) public returns(bytes32) {
+	function genRandom(Commit memory info) public view returns(bytes32) {
 		bytes32 hash = blockhash(info.block);
 		return keccak256(abi.encodePacked(hash, info.seed));
 	}
