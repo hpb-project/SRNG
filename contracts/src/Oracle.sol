@@ -4,24 +4,96 @@ import "../interface/IERC20.sol";
 import "../interface/IConfig.sol";
 import "../interface/IStorage.sol";
 import "../interface/IConsumerBase.sol";
+import "../interface/ICommitReveal.sol";
+import "../interface/IDepositPool.sol";
 import "../common/Auth.sol";
 import "../common/Commit.sol";
+import "../interface/IStat.sol";
 
 // oracle is use to receive all request and find random to consumer.
 contract Oracle is Admin {
     IStorage store;
     IERC20   hrgtoken;
     IConfig  config;
+    ICommitReveal   commitReveal;
+    IDepositPool 	tokenPool;
+    IStat   stat;
 
     constructor (address _token, address _config) {
         hrgtoken = IERC20(_token);
         config = IConfig(_config);
     }
 
-    function requestRandom(address consumer) public returns (bool) {
-        bytes32 commit = store.findCommit(consumer);
-        require(uint256(commit) != uint256(0), "Oracle::Not fund commit");
-        return true;
+    function setting(address _deposit, address _store, address _commitReveal, address _stat) public onlyAdmin {
+        tokenPool = IDepositPool(_deposit);
+        store = IStorage(_store);
+        commitReveal = ICommitReveal(_commitReveal);
+        stat = IStat(_stat);
     }
 
+    function requestRandom(address consumer) public returns (bool) {
+        bool find;
+        Commit memory info;
+        (find, info) = store.findCommit();
+        require(find == true, "Oracle::Not fund commit");
+        uint256 fee = config.getFee();
+        uint256 balance = hrgtoken.balanceOf(msg.sender);
+        require(balance >= fee, "Oracle::Not enough token for fee");
+        tokenPool.deposit(msg.sender, fee);
+        emit Subscribe(consumer, info.author, info.commit, block.number);
+        return true;
+    }
+    event Subscribe(address consumer, address commiter, bytes32 hash, uint256 block);
+
+    function unsubscribeRandom(address consumer, bytes32 hash) public {
+        Commit memory info = store.getCommit(hash);
+        require(info.substatus == 1, "commit not subscribe");
+        uint256 unsubBlocks = config.getUnSubBlocks();
+        require((info.subBlock + unsubBlocks) >= block.number, "out of unsub max blockx");
+        store.unsubscribeCommit(consumer, hash);
+        uint256 fee = config.getFee();
+        tokenPool.withdraw(msg.sender, fee);
+        emit UnSubscribe(consumer, info.author, hash, block.number);
+    }
+    event UnSubscribe(address consumer, address commiter, bytes32 hash, uint256 block);
+
+    function commit(bytes32 hash) public {
+        commitReveal.commit(hash);
+        emit CommitHash(msg.sender, hash, block.number);
+    }
+    event CommitHash(address sender, bytes32 dataHash, uint256 block);
+
+    function reveal(bytes32 hash, bytes32 seed) public {
+        bool consumed;
+        Commit memory info;
+        (consumed, info) = commitReveal.reveal(hash, seed);
+        if (consumed) {
+            bytes32 random = commitReveal.genRandom(info);
+            emit RandomConsumed(info.author, info.consumer, random);
+        } else {
+            emit RevealSeed(info.author, seed);
+        }
+    }
+    event RandomConsumed(address commiter, address consumer, bytes32 random);
+    event RevealSeed(address commiter, bytes32 seed);
+
+    function getCommiterValidCount(address commiter) public view returns (uint256) {
+        return stat.getCommiterValidCount(commiter);
+    }
+
+    function getConsumerConsumedCount(address consumer) public view returns (uint256) {
+        return stat.getConsumerConsumedCount(consumer);
+    }
+
+    function getTotalStat() public view returns (uint256, uint256, uint256) {
+        return stat.getTotalStat();
+    }
+
+    function getUserUnverifiedList(address commiter) public view returns (Commit [] memory) {
+        return store.getUserUnverifiedCommits(commiter);
+    }
+
+    function getUserSubscribed(address consumer) public view returns (Commit [] memory) {
+        
+    }
 }

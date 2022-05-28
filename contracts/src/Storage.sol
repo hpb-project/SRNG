@@ -11,7 +11,7 @@ contract Storage is Admin {
     mapping(bytes32 => Commit) CommitPool;          // all unverified commit
     mapping(bytes32 => Commit) HistoryCommits;
     
-    mapping(address => Unverified) UserCommits;      // save all user's unverified commit.
+    mapping(address => Unverified) UserCommits;     // save all user's unverified commit.
     address [] Commiters;                           // all commiter that have commit in pool.
     uint256    CommiterCount;
 
@@ -201,14 +201,17 @@ contract Storage is Admin {
         Commit memory c;
         return (false,c);
     }
-    
-    function subscribeCommit(address consumer) public returns (bytes32) {
+
+    function findCommit() public view returns (bool, Commit memory) {
         bool find;
         Commit memory commit ;
         (find, commit) = _findSubableCommit();
-        require(find==true, "not find commit could subscribe");
 
-        updateCommitSubscribe(commit.commit, consumer);
+        return (find, commit);
+    }
+    
+    function subscribeCommit(address consumer, bytes32 hash) public {
+        updateCommitSubscribe(hash, consumer);
     }
 
     function unsubscribeCommit(address consumer, bytes32 hash) public {
