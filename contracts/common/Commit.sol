@@ -2,11 +2,18 @@
 pragma solidity ^0.8.0;
 
 struct Commit {
+    // fields for commit.
     address     author;
-    address     consumer;
     bytes32 	commit;
-    bytes32		seed;
-    uint64 		block;
-    bool 		revealed;
-    uint8       status; // 0: not used 1: in subcribe 2: commiter finished
+    uint256		block;  // commit block
+
+    // fields for verify.
+    bytes32		seed;   // verified seed.
+    bool 		revealed;   // finish verified.
+    uint256     verifiedBlock; // verified block.
+
+    // fields for consume.
+    address     consumer;
+    uint256     subBlock; // subscribe block.
+    uint8       substatus; // 0: not used 1: in subcribe 2: commiter finished
 }
