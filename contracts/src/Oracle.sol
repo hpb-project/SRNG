@@ -18,6 +18,9 @@ contract Oracle is Admin {
     ICommitReveal   commitReveal;
     IDepositPool 	tokenPool;
     IStat   stat;
+    constructor() {
+		addAdmin(msg.sender);
+	}
 
     function setting(address _token, address _config, address _deposit, address _store, address _commitReveal, address _stat) public onlyAdmin {
         hrgtoken = IERC20(_token);

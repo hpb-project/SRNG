@@ -15,6 +15,10 @@ contract Storage is Admin {
     address [] Commiters;                           // all commiter that have commit in pool.
     uint256    CommiterCount;
 
+    constructor() {
+		addAdmin(msg.sender);
+	}
+
     // 
     function _addNewCommiter(address commiter) internal {
         if (Commiters.length <= CommiterCount) {

@@ -9,6 +9,10 @@ contract Config is Admin {
     uint256 _deposit_amount = 100;
     uint256 _unsub_blocks = 200; // max block count from subscribe to unsubscribe.
     
+    constructor() {
+		addAdmin(msg.sender);
+	}
+    
     function setFee(uint256 newfee) public onlyAdmin {
         _fee = newfee;
     }

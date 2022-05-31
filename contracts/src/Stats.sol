@@ -14,6 +14,9 @@ contract Stats is Admin {
     uint256 totalCommitters;
     uint256 totalConsumers;
     uint256 totalConsumedCommit;
+    constructor() {
+		addAdmin(msg.sender);
+	}
 
     function addUnVerified(address committer) public returns (uint256) {
         unverifiedCommit[committer] = unverifiedCommit[committer] + 1;

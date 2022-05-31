@@ -18,6 +18,9 @@ contract CommitReveal is Admin {
 	IDepositPool 	tokenPool;
 	IStat  			stat;
 	IStorage        store;
+	constructor() {
+		addAdmin(msg.sender);
+	}
 
 	function setAddress(address token, address _config, address _pool, address _stat, address _storage) public onlyAdmin {
 		hrgToken = IERC20(token);
