@@ -10,6 +10,7 @@ contract DepositPool is Admin {
     IERC20 hrgToken;
     constructor(address token) {
         hrgToken = IERC20(token);
+		addAdmin(msg.sender);
     }
 
     function deposit(address user, uint256 amount) public {

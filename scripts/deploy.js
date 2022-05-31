@@ -41,13 +41,13 @@ function printinfo(contractMap) {
     var stats = contractMap.get("stats");
     var commiter = contractMap.get("commiter");
     var oracle = contractMap.get("oracle");
-    console.log("deploy token at address", token.address);
-    console.log("deploy deposit at address", deposit.address);
-    console.log("deploy config at address", config.address);
-    console.log("deploy storage at address", storage.address);
-    console.log("deploy stats at address", stats.address);
-    console.log("deploy commiter at address", commiter.address);
-    console.log("deploy oracle at address", oracle.address);
+    console.log("deploy token     at address", token.address);
+    console.log("deploy deposit   at address", deposit.address);
+    console.log("deploy config    at address", config.address);
+    console.log("deploy storage   at address", storage.address);
+    console.log("deploy stats     at address", stats.address);
+    console.log("deploy commiter  at address", commiter.address);
+    console.log("deploy oracle    at address", oracle.address);
 }
 
 async function deploy_token(tokenFactory) {
@@ -84,7 +84,7 @@ async function setting(contractMap) {
     var oracle = contractMap.get("oracle");
 
     await commiter.setAddress(token.address, config.address, deposit.address, stats.address, storage.address);
-    await oracle.setAddress(token.address, config.address, deposit.address, storage.address, commiter.address, stats.address);
+    await oracle.setting(token.address, config.address, deposit.address, storage.address, commiter.address, stats.address);
 }
 
 
