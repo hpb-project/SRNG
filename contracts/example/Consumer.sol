@@ -14,7 +14,7 @@ contract ComsumerExample is IConsumerBase, Admin {
     }
 
     // responseRandom will 
-    function responseRandom(bytes32 commit, bytes32 random) public returns (bool) {
+    function responseRandom(bytes32 commit, bytes32 random) override public returns (bool) {
         _nrandom = uint256(random);
         return true;
     }

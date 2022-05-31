@@ -68,7 +68,7 @@ contract HRGToken is Context, IERC20, IERC20Metadata {
         emit Transfer(address(0), owner, _totalSupply);
     }
 
-    function mint(address account, uint256 amount) public onlyMinter returns (bool) {
+    function mint(address account, uint256 amount) override public onlyMinter returns (bool) {
         _mint(account, amount);
         return true;
     }

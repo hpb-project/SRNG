@@ -19,12 +19,9 @@ contract Oracle is Admin {
     IDepositPool 	tokenPool;
     IStat   stat;
 
-    constructor (address _token, address _config) {
+    function setting(address _token, address _config, address _deposit, address _store, address _commitReveal, address _stat) public onlyAdmin {
         hrgtoken = IERC20(_token);
         config = IConfig(_config);
-    }
-
-    function setting(address _deposit, address _store, address _commitReveal, address _stat) public onlyAdmin {
         tokenPool = IDepositPool(_deposit);
         store = IStorage(_store);
         commitReveal = ICommitReveal(_commitReveal);
@@ -52,7 +49,7 @@ contract Oracle is Admin {
         require((info.subBlock + unsubBlocks) >= block.number, "out of unsub max blockx");
         store.unsubscribeCommit(consumer, hash);
         uint256 fee = config.getFee();
-        tokenPool.withdraw(msg.sender, fee);
+        tokenPool.withdraw(msg.sender, fee/2);      // only withdraw 1/2 fee.
         emit UnSubscribe(consumer, info.author, hash, block.number);
     }
     event UnSubscribe(address consumer, address commiter, bytes32 hash, uint256 block);
@@ -67,15 +64,14 @@ contract Oracle is Admin {
         bool consumed;
         Commit memory info;
         (consumed, info) = commitReveal.reveal(hash, seed);
+        emit RevealSeed(info.author, seed, block.number);
         if (consumed) {
             bytes32 random = commitReveal.genRandom(info);
-            emit RandomConsumed(info.author, info.consumer, random);
-        } else {
-            emit RevealSeed(info.author, seed);
+            emit RandomConsumed(info.author, info.consumer, random, block.number);
         }
     }
-    event RandomConsumed(address commiter, address consumer, bytes32 random);
-    event RevealSeed(address commiter, bytes32 seed);
+    event RandomConsumed(address commiter, address consumer, bytes32 random, uint256 block);
+    event RevealSeed(address commiter, bytes32 seed, uint256 block);
 
     function getCommiterValidCount(address commiter) public view returns (uint256) {
         return stat.getCommiterValidCount(commiter);
@@ -94,6 +90,7 @@ contract Oracle is Admin {
     }
 
     function getUserSubscribed(address consumer) public view returns (Commit [] memory) {
+        // todo: implement get subscribe commit list.
         
     }
 }
