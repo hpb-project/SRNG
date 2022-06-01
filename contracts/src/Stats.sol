@@ -14,11 +14,19 @@ contract Stats is Admin {
     uint256 totalCommitters;
     uint256 totalConsumers;
     uint256 totalConsumedCommit;
-    constructor() {
+    address _commiter;
+
+    modifier onlyCommiter() {
+        require(msg.sender==_commiter, "only commiter could do it");
+        _;
+    }
+
+    constructor(address commiter) {
+        _commiter = commiter;
 		addAdmin(msg.sender);
 	}
 
-    function addUnVerified(address committer) public returns (uint256) {
+    function addUnVerified(address committer) public onlyCommiter returns (uint256) {
         unverifiedCommit[committer] = unverifiedCommit[committer] + 1;
         return unverifiedCommit[committer];
     }
@@ -27,7 +35,7 @@ contract Stats is Admin {
         return unverifiedCommit[committer];
     }
 
-    function addVerifiedCommit(address commiter) public {
+    function addVerifiedCommit(address commiter) public onlyCommiter {
         require(unverifiedCommit[commiter] > 0, "have no unverified commit");
 
         if (committers[commiter] == 0) {
@@ -40,7 +48,7 @@ contract Stats is Admin {
         unverifiedCommit[commiter] = unverifiedCommit[commiter] - 1;
     }
 
-    function addConsumedCommit(address commiter, address consumer) public {
+    function addConsumedCommit(address commiter, address consumer) public onlyCommiter {
         if (consumers[consumer] == 0) {
             consumers[consumer] = 1;
             totalConsumers = totalConsumers + 1;

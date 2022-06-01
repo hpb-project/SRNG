@@ -24,7 +24,14 @@ contract Storage is Admin {
 
     mapping(address => Subscribed) UserSubscribed;  // save all user's un-finished subscribe.
 
-    constructor() {
+    address _commiter;
+    modifier onlyCommiter() {
+        require(msg.sender==_commiter, "only commiter could do it");
+        _;
+    }
+
+    constructor(address commiter) {
+        _commiter = commiter;
 		addAdmin(msg.sender);
 	}
 
