@@ -36,10 +36,7 @@ contract Oracle is Admin {
         Commit memory info;
         (find, info) = store.findCommit();
         require(find == true, "Oracle::Not fund commit");
-        uint256 fee = config.getFee();
-        uint256 balance = hrgtoken.balanceOf(msg.sender);
-        require(balance >= fee, "Oracle::Not enough token for fee");
-        tokenPool.deposit(msg.sender, fee);
+        commitReveal.subScribeCommit(consumer, info.commit);
         emit Subscribe(consumer, info.author, info.commit, block.number);
         return true;
     }
@@ -50,15 +47,14 @@ contract Oracle is Admin {
         require(info.substatus == 1, "commit not subscribe");
         uint256 unsubBlocks = config.getUnSubBlocks();
         require((info.subBlock + unsubBlocks) >= block.number, "out of unsub max blockx");
-        store.unsubscribeCommit(consumer, hash);
-        uint256 fee = config.getFee();
-        tokenPool.withdraw(msg.sender, fee/2);      // only withdraw 1/2 fee.
+
+        commitReveal.unSubscribeCommit(consumer, hash);
         emit UnSubscribe(consumer, info.author, hash, block.number);
     }
     event UnSubscribe(address consumer, address commiter, bytes32 hash, uint256 block);
 
     function commit(bytes32 hash) public {
-        commitReveal.commit(hash);
+        commitReveal.commit(hash, msg.sender);
         emit CommitHash(msg.sender, hash, block.number);
     }
     event CommitHash(address sender, bytes32 dataHash, uint256 block);
@@ -66,7 +62,7 @@ contract Oracle is Admin {
     function reveal(bytes32 hash, bytes32 seed) public {
         bool consumed;
         Commit memory info;
-        (consumed, info) = commitReveal.reveal(hash, seed);
+        (consumed, info) = commitReveal.reveal(hash, seed, msg.sender);
         emit RevealSeed(info.author, seed, block.number);
         if (consumed) {
             bytes32 random = commitReveal.genRandom(info);

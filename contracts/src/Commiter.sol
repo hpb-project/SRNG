@@ -18,7 +18,15 @@ contract CommitReveal is Admin {
 	IDepositPool 	tokenPool;
 	IStat  			stat;
 	IStorage        store;
-	constructor() {
+	address 		oracle;
+
+	modifier onlyOracle() {
+        require(msg.sender==oracle, "only oracle could do it");
+        _;
+    }
+
+	constructor(address _oracle) {
+		oracle = _oracle;
 		addAdmin(msg.sender);
 	}
 
@@ -30,8 +38,8 @@ contract CommitReveal is Admin {
 		store = IStorage(_storage);
 	}
 
-	function commit(bytes32 hash) public {
-		uint256 unverified = stat.getUnVerified(msg.sender);
+	function commit(bytes32 hash, address user) public onlyOracle {
+		uint256 unverified = stat.getUnVerified(user);
 		uint256 maxunverified = config.getMaxUnverify();
 		require(unverified <= maxunverified, "unverified commit over flow");
 
@@ -39,22 +47,22 @@ contract CommitReveal is Admin {
 
 		// deposit token.
 		uint256 amount = config.getDepositAmount();
-		uint256 balance = hrgToken.balanceOf(msg.sender);
+		uint256 balance = hrgToken.balanceOf(user);
 		require(balance >= amount, "have no enough token for deposit");
-		tokenPool.deposit(msg.sender, amount);
+		tokenPool.deposit(user, amount);
 
 		Commit memory cmt;
 
-		cmt.author = msg.sender;
+		cmt.author = user;
 		cmt.commit = hash;
 		cmt.block = block.number;
-		store.addNewCommit(msg.sender, cmt);
+		store.addNewCommit(user, cmt);
 
 		// add unverified
-		stat.addUnVerified(msg.sender);
+		stat.addUnVerified(user);
 	}
 
-	function reveal(bytes32 hash, bytes32 seed) public returns (bool, Commit memory) {
+	function reveal(bytes32 hash, bytes32 seed, address user) public onlyOracle returns (bool, Commit memory) {
 		Commit memory info = store.getCommit(hash);
 		
 		require(info.block != 0, "CommitReveal::reveal: Have no commit need reveal");
@@ -67,17 +75,17 @@ contract CommitReveal is Admin {
 		info.seed = seed;
 
 		// add stats.
-		stat.addVerifiedCommit(msg.sender);
+		stat.addVerifiedCommit(user);
 
 		// todo: mint new token for commiter.
 		uint256 reward = config.getRewards();
-		hrgToken.mint(msg.sender, reward);
+		hrgToken.mint(user, reward);
 		bool consumed;
 
 		// check consume.
 		if (info.consumer != address(0)) 
 		{
-			store.updateCommitConsumed(msg.sender, hash, seed);
+			store.updateCommitConsumed(user, hash, seed);
 			
 			bytes32 random = genRandom(info);
 			IConsumerBase con = IConsumerBase(info.consumer);
@@ -87,17 +95,17 @@ contract CommitReveal is Admin {
 
 			// reward consumer fee.
 			uint256 feeAmount = config.getFee();
-			tokenPool.rewardFee(msg.sender, feeAmount);
+			tokenPool.rewardFee(user, feeAmount);
 			
-			stat.addConsumedCommit(msg.sender, info.consumer);
+			stat.addConsumedCommit(user, info.consumer);
 		} else {
-			store.updateCommitVerified(msg.sender, hash, seed);
+			store.updateCommitVerified(user, hash, seed);
 			consumed = false;
 		}
 		
 		// withdraw token.
 		uint256 amount = config.getDepositAmount();
-		tokenPool.withdraw(msg.sender, amount);
+		tokenPool.withdraw(user, amount);
 
 		return (consumed,info);
 	}
@@ -109,5 +117,19 @@ contract CommitReveal is Admin {
 	function genRandom(Commit memory info) public view returns(bytes32) {
 		bytes32 hash = blockhash(info.block);
 		return keccak256(abi.encodePacked(hash, info.seed));
+	}
+
+	function subScribeCommit(address consumer, bytes32 hash) public onlyOracle {
+        uint256 fee = config.getFee();
+        uint256 balance = hrgToken.balanceOf(msg.sender);
+        require(balance >= fee, "CommitReveal::Not enough token for fee");
+		store.subscribeCommit(consumer, hash);
+        tokenPool.deposit(consumer, fee);
+	}
+
+	function unSubscribeCommit(address consumer, bytes32 hash) public onlyOracle {
+        store.unsubscribeCommit(consumer, hash);
+        uint256 fee = config.getFee();
+        tokenPool.withdraw(consumer, fee/2);      // only withdraw 1/2 fee.
 	}
 }

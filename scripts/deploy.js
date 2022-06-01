@@ -1,5 +1,5 @@
 const hre = require("hardhat");
-require("@nomiclabs/hardhat-web3");
+const web3 = require("web3");
 
 async function initDeploy() {
     var contractMap = new Map();
@@ -13,12 +13,14 @@ async function initDeploy() {
     const Commiter = await hre.ethers.getContractFactory("CommitReveal");
 
     var token = await deploy_token(HRGToken);
-    var deposit = await deploy_deposit(DepositPool, token);
-    var config = await deploy_contract(Config, "Config");
-    var storage = await deploy_contract(Storage, "Storage");
-    var stats = await deploy_contract(Stats, "Stats");
-    var commiter = await deploy_contract(Commiter, "Commiter");
     var oracle = await deploy_contract(Oracle, "Oracle");
+    var commiter = await deploy_with_oracle(Commiter, oracle);
+    var deposit = await deploy_deposit(DepositPool, token, commiter);
+    var config = await deploy_contract(Config, "Config");
+    var storage = await deploy_with_commiter(Storage, commiter);
+    var stats = await deploy_with_commiter(Stats, commiter);
+
+
 
     contractMap.set("token", token);
     contractMap.set("deposit", deposit);
@@ -61,8 +63,8 @@ async function deploy_token(tokenFactory) {
     return token;
 }
 
-async function deploy_deposit(factory, token) {
-    const contract = await factory.deploy(token.address);
+async function deploy_deposit(factory, token, commiter) {
+    const contract = await factory.deploy(token.address, commiter.address);
     await contract.deployed();
     console.log("deployed contract at ", contract.address, "hash ", contract.hash);
 
@@ -71,6 +73,22 @@ async function deploy_deposit(factory, token) {
 
 async function deploy_contract(factory, name) {
     const contract = await factory.deploy();
+    await contract.deployed();
+    console.log("deployed contract at ", contract.address, "hash ", contract.hash);
+
+    return contract;
+}
+
+async function deploy_with_oracle(factory, oracle) {
+    const contract = await factory.deploy(oracle.address);
+    await contract.deployed();
+    console.log("deployed contract at ", contract.address, "hash ", contract.hash);
+
+    return contract;
+}
+
+async function deploy_with_commiter(factory, commiter) {
+    const contract = await factory.deploy(commiter.address);
     await contract.deployed();
     console.log("deployed contract at ", contract.address, "hash ", contract.hash);
 
@@ -98,6 +116,10 @@ async function testCommit(contractMap) {
     var oracle = contractMap.get("oracle");
 
     var depositAmount = await config.getDepositAmount();
+    console.log("got depositAmount is", depositAmount);
+    var depositwei = web3.utils.toWei(depositAmount.toString(), 'ether').toString();
+    console.log("deposit wei is ", depositwei);
+    await token.approve(oracle.address, depositwei);
     await token.approve(oracle.address, web3.utils.toEther(depositAmount));
 
     var hash = "0xe2c84307652ce1de54ce69fdbf6a9faf653c2d47d847daf05b9b6c62616d7b63";
