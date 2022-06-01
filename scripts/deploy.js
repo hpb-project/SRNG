@@ -114,23 +114,28 @@ async function testCommit(contractMap) {
     var token = contractMap.get("token");
     var config = contractMap.get("config");
     var oracle = contractMap.get("oracle");
+    var deposit = contractMap.get("deposit");
 
     var depositAmount = await config.getDepositAmount();
     console.log("got depositAmount is", depositAmount);
     var depositwei = web3.utils.toWei(depositAmount.toString(), 'ether').toString();
     console.log("deposit wei is ", depositwei);
-    await token.approve(oracle.address, depositwei);
-    await token.approve(oracle.address, web3.utils.toEther(depositAmount));
+    var t = await token.approve(deposit.address, depositwei);
+	await t.wait();
 
     var hash = "0xe2c84307652ce1de54ce69fdbf6a9faf653c2d47d847daf05b9b6c62616d7b63";
     var tx = await oracle.commit(hash);
     await tx.wait();
     console.log("commit succeed with tx", tx);
+
+    var storage = contractMap.get("storage");
+    var commit = await storage.getCommit(hash);
+	console.log("get commit info", commit);
 }
 
 async function main() {
-    var contracts = initDeploy();
-    testCommit(contracts);
+    var contracts = await initDeploy();
+    await testCommit(contracts);
 
 }
 
