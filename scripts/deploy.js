@@ -118,7 +118,7 @@ async function testCommit(contractMap) {
 
     var depositAmount = await config.getDepositAmount();
     console.log("got depositAmount is", depositAmount);
-    var depositwei = web3.utils.toWei(depositAmount.toString(), 'ether').toString();
+    var depositwei = web3.utils.toWei(depositAmount.toString(), 'wei').toString();
     console.log("deposit wei is ", depositwei);
     var t = await token.approve(deposit.address, depositwei);
 	await t.wait();

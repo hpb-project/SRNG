@@ -6,7 +6,7 @@ contract Config is Admin {
     uint256 _rewards = 0.1 ether;
     uint256 _fee = 0.1 ether;
     uint256 _max_unverify = 10; // max unverified record per committer
-    uint256 _deposit_amount = 100;
+    uint256 _deposit_amount = 100 ether;
     uint256 _unsub_blocks = 200; // max block count from subscribe to unsubscribe.
     
     constructor() {
