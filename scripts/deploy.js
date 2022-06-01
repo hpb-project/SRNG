@@ -1,6 +1,7 @@
 const hre = require("hardhat");
+require("@nomiclabs/hardhat-web3");
 
-async function main() {
+async function initDeploy() {
     var contractMap = new Map();
 
     const HRGToken = await hre.ethers.getContractFactory("HRGToken");
@@ -30,6 +31,8 @@ async function main() {
     await setting(contractMap);
 
     printinfo(contractMap);
+
+    return contractMap;
 }
 
 function printinfo(contractMap) {
@@ -83,10 +86,31 @@ async function setting(contractMap) {
     var commiter = contractMap.get("commiter");
     var oracle = contractMap.get("oracle");
 
-    await commiter.setAddress(token.address, config.address, deposit.address, stats.address, storage.address);
-    await oracle.setting(token.address, config.address, deposit.address, storage.address, commiter.address, stats.address);
+    var tx = await commiter.setAddress(token.address, config.address, deposit.address, stats.address, storage.address);
+    await tx.wait();
+    tx = await oracle.setting(token.address, config.address, deposit.address, storage.address, commiter.address, stats.address);
+    await tx.wait();
 }
 
+async function testCommit(contractMap) {
+    var token = contractMap.get("token");
+    var config = contractMap.get("config");
+    var oracle = contractMap.get("oracle");
+
+    var depositAmount = await config.getDepositAmount();
+    await token.approve(oracle.address, web3.utils.toEther(depositAmount));
+
+    var hash = "0xe2c84307652ce1de54ce69fdbf6a9faf653c2d47d847daf05b9b6c62616d7b63";
+    var tx = await oracle.commit(hash);
+    await tx.wait();
+    console.log("commit succeed with tx", tx);
+}
+
+async function main() {
+    var contracts = initDeploy();
+    testCommit(contracts);
+
+}
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
