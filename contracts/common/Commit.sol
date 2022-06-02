@@ -14,6 +14,7 @@ struct Commit {
 
     // fields for consume.
     address     consumer;
+    address     subsender;
     uint256     subBlock; // subscribe block.
     uint8       substatus; // 0: not used 1: in subcribe 2: commiter finished
 }
