@@ -108,6 +108,9 @@ async function setting(contractMap) {
     await tx.wait();
     tx = await oracle.setting(token.address, config.address, deposit.address, storage.address, commiter.address, stats.address);
     await tx.wait();
+
+    tx = await token.setMinter(commiter.address);
+    await tx.wait();
 }
 
 async function testCommit(contractMap) {
@@ -140,6 +143,7 @@ async function testCommit(contractMap) {
     console.log("reveal succeed with tx", tx.hash);
 
     commit = await storage.getCommit(hash);
+    console.log("get commit info", commit);
 
 }
 
