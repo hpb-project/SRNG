@@ -12,6 +12,6 @@ interface IStorage {
     function updateCommitVerified(address, bytes32, bytes32) external;
     function updateCommitConsumed(address, bytes32, bytes32) external;
     function findCommit() external view returns (bool, Commit memory) ;
-    function subscribeCommit(address,bytes32) external;
+    function subscribeCommit(address,address,bytes32) external;
     function unsubscribeCommit(address, bytes32) external;
 }

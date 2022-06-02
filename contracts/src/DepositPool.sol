@@ -11,7 +11,6 @@ contract DepositPool is Admin {
     address commiter;
 
     uint256 _rewards = 100 ether;
-    uint256 _fee = 150 ether;
 
     uint256 mintSupply = 500000000 ether;
     uint256 minted = 0;
@@ -27,25 +26,18 @@ contract DepositPool is Admin {
 		addAdmin(msg.sender);
     }
 
-    function setFee(uint256 newfee) public onlyAdmin {
-        _fee = newfee;
-    }
-
-    function getFee() public view returns (uint256) {
-        return _fee;
-    }
 
     function _calcReward(uint256 minted) internal view returns (uint256) {
         uint256 half = mintSupply/2;
         uint256 r = _rewards;
-        for (;minted >= half;) {
+        for (;minted > half;) {
             half = half + half/2;
             r = r/2; 
         }
         return r;
     }
 
-    function getRewards(uint256 minted) public view returns (uint256) {
+    function getRewards() public view returns (uint256) {
         return _calcReward(minted);
     }
 
