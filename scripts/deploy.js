@@ -112,6 +112,15 @@ async function setting(contractMap) {
     tx = await token.setMinter(commiter.address);
     await tx.wait();
 }
+
+function genrandom() {
+	const hexString = Array(64)
+	  .fill()
+	  .map(() => Math.round(Math.random() * 0xF).toString(16))
+	  .join('');
+	return '0x'+hexString
+	console.log("get random", hexString);
+}
 async function testCommit(contractMap) {
     var token = contractMap.get("token");
     var config = contractMap.get("config");
@@ -123,9 +132,10 @@ async function testCommit(contractMap) {
     var t = await token.approve(deposit.address, depositwei);
     await t.wait();
 
-    var seed = "0xe2c84307652ce1de54ce69fdbf6a9faf653c2d47d847daf05b9b6c62616d7b63";
+    var seed = genrandom();
     var hash = await oracle.getHash(seed);
-    console.log("get hash is", hash);
+    console.log("seed is ", seed);
+    console.log("hash is ",hash);
 
     var tx = await oracle.commit(hash);
     await tx.wait();
@@ -146,17 +156,19 @@ async function testCommitAndReveal(contractMap) {
     var t = await token.approve(deposit.address, depositwei);
     await t.wait();
 
-    var seed = "0x22c84307652ce1de54ce69fdbf6a9faf653c2d47d847daf05b9b6c62616d7b66";
+    var seed = genrandom();
     var hash = await oracle.getHash(seed);
-    console.log("get hash is", hash);
+    console.log("seed is ", seed);
+    console.log("hash is ",hash);
 
     var tx = await oracle.commit(hash);
     await tx.wait();
+    console.log("commit succeed with tx", tx.hash);
 
     var storage = contractMap.get("storage");
     var commit = await storage.getCommit(hash);
 
-    tx = await oracle.reveal(hash, seed);
+    tx = await oracle.reveal(hash, seed, {gasLimit:10000000});
     await tx.wait();
     console.log("reveal succeed with tx", tx.hash);
 
@@ -209,19 +221,19 @@ async function testCaclReward(contractMap) {
 async function testCommitAndSubscribe(contractMap) {
     var token = contractMap.get("token");
     var config = contractMap.get("config");
+	console.log("config is", config);
     var oracle = contractMap.get("oracle");
     var deposit = contractMap.get("deposit");
 
     var depositAmount = await config.getDepositAmount();
-    console.log("got depositAmount is", depositAmount);
     var depositwei = web3.utils.toWei(depositAmount.toString(), 'wei').toString();
-    console.log("deposit wei is ", depositwei);
     var t = await token.approve(deposit.address, depositwei);
     await t.wait();
 
-    var seed = "0xf2c84307652ce1de54ce69fdbf6a9faf653c2d47d847daf05b9b6c62616d7b68";
+    var seed = genrandom();
     var hash = await oracle.getHash(seed);
-    console.log("get hash is", hash);
+    console.log("seed is", seed);
+    console.log("hash is", hash);
 
     var tx = await oracle.commit(hash);
     await tx.wait();
@@ -230,12 +242,46 @@ async function testCommitAndSubscribe(contractMap) {
     var commit = await storage.getCommit(hash);
     await doSubscribe(contractMap);
 }
+async function initialContract() {
+var token     = "0x864Dda775dd61B9E45D66A841A13DaA755380890";
+var deposit   = "0x3FDb09cF909C24953e980d3A3d4A15269ef25CDb";
+var config    = "0x33Ea76978f01020aa2b0b40cd0B47E17FcA7501C";
+var storage   = "0x3350C1BC87D327f41c0feb2C9b0cC67179b40ADC";
+var stats     = "0xaE039318642eb91662CaB22119eaa4C6c3B3ca2F";
+var commiter  = "0xDD77BC4Ba1CfD690B483c206Ad85C205F61329d1";
+var oracle    = "0x2d0B741A9F159939E0e797b4bdBD9Cd3b37D4d91";
+    var contractMap = new Map();
+
+    const HRGToken = await hre.ethers.getContractAt("HRGToken", token);
+    const Config = await hre.ethers.getContractAt("Config", config);
+    const Oracle = await hre.ethers.getContractAt("Oracle", oracle);
+    const Storage = await hre.ethers.getContractAt("Storage", storage);
+    const Stats = await hre.ethers.getContractAt("Stats", stats);
+    const DepositPool = await hre.ethers.getContractAt("DepositPool", deposit);
+    const Commiter = await hre.ethers.getContractAt("CommitReveal", commiter);
+
+
+    contractMap.set("token", HRGToken);
+    contractMap.set("deposit", DepositPool);
+    contractMap.set("config", Config);
+    contractMap.set("storage", Storage);
+    contractMap.set("stats", Stats);
+    contractMap.set("commiter", Commiter);
+    contractMap.set("oracle", Oracle);
+    return contractMap;
+}
 
 async function main() {
-    var contracts = await initDeploy();
-    await testCommitAndSubscribe(contracts);
+    //var contracts = await initDeploy();
+    var contracts = await initialContract();
+    //await testCommitAndSubscribe(contracts);
+    await testCommit(contracts);
+    await testCommit(contracts);
+    await testCommitAndReveal(contracts);
     await testCommitAndReveal(contracts);
     await testCommit(contracts);
+    await testCommitAndReveal(contracts);
+
     //await testCaclReward(contracts);
 }
 
