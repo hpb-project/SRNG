@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 import "../common/Auth.sol";
 
 contract Config is Admin {
-    uint256 _rewards = 0.1 ether;
-    uint256 _fee = 0.1 ether;
     uint256 _max_unverify = 10; // max unverified record per committer
     uint256 _deposit_amount = 100 ether;
     uint256 _unsub_blocks = 200; // max block count from subscribe to unsubscribe.
@@ -12,22 +10,6 @@ contract Config is Admin {
     constructor() {
 		addAdmin(msg.sender);
 	}
-    
-    function setFee(uint256 newfee) public onlyAdmin {
-        _fee = newfee;
-    }
-
-    function getFee() public view returns (uint256) {
-        return _fee;
-    }
-
-    function setRewards(uint256 reward) public onlyAdmin {
-        _rewards = reward;
-    }
-
-    function getRewards() public view returns (uint256) {
-        return _rewards;
-    }
 
     function setMaxUnverify(uint256 max_unverify) public onlyAdmin {
         _max_unverify = max_unverify;
