@@ -89,7 +89,10 @@ contract Oracle is Admin {
     }
 
     function getUserSubscribed(address consumer) public view returns (Commit [] memory) {
-        // todo: implement get subscribe commit list.
-        
+        return store.getUserSubscribedCommits(consumer);
+    }
+
+    function getHash(bytes32 seed) public view returns (bytes32) {
+        return commitReveal.getHash(seed);
     }
 }

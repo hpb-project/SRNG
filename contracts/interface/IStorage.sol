@@ -8,6 +8,7 @@ interface IStorage {
     function addNewCommit(address, Commit memory ) external;
     function getCommit(bytes32 hash) external view returns (Commit memory);
     function getUserUnverifiedCommits(address) external view returns (Commit [] memory);
+    function getUserSubscribedCommits(address consumer) external view returns (Commit [] memory);
     function updateCommitVerified(address, bytes32, bytes32) external;
     function updateCommitConsumed(address, bytes32, bytes32) external;
     function findCommit() external view returns (bool, Commit memory) ;
