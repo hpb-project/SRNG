@@ -11,7 +11,7 @@ import "../common/Commit.sol";
 
 contract CommitReveal is Admin {
 	uint8 public minblocks = 1;
-	uint8 public maxblocks = 200;
+	uint32 public maxblocks = 20000;
 
 	IERC20 			hrgToken;
 	IConfig 		config;
@@ -78,7 +78,7 @@ contract CommitReveal is Admin {
 		stat.addVerifiedCommit(user);
 
 		// todo: mint new token for commiter.
-		uint256 reward = config.getRewards();
+		uint256 reward = tokenPool.getRewards();
 		hrgToken.mint(user, reward);
 		bool consumed;
 
@@ -119,17 +119,17 @@ contract CommitReveal is Admin {
 		return keccak256(abi.encodePacked(hash, info.seed));
 	}
 
-	function subScribeCommit(address consumer, bytes32 hash) public onlyOracle {
-        uint256 fee = config.getFee();
-        uint256 balance = hrgToken.balanceOf(msg.sender);
-        require(balance >= fee, "CommitReveal::Not enough token for fee");
-		store.subscribeCommit(consumer, hash);
-        tokenPool.deposit(consumer, fee);
+	function subScribeCommit(address user, address consumer, bytes32 hash) public onlyOracle {
+		uint256 fee = config.getFee();
+		uint256 balance = hrgToken.balanceOf(user);
+		require(balance >= fee, "CommitReveal::Not enough token for fee");
+		store.subscribeCommit(user, consumer, hash);
+		tokenPool.deposit(user, fee);
 	}
 
-	function unSubscribeCommit(address consumer, bytes32 hash) public onlyOracle {
-        store.unsubscribeCommit(consumer, hash);
-        uint256 fee = config.getFee();
-        tokenPool.withdraw(consumer, fee/2);      // only withdraw 1/2 fee.
+	function unSubscribeCommit(address user, bytes32 hash) public onlyOracle {
+		store.unsubscribeCommit(user, hash);
+		uint256 fee = config.getFee();
+		tokenPool.withdraw(user, fee/2);      // only withdraw 1/2 fee.
 	}
 }

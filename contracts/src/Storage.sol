@@ -170,16 +170,16 @@ contract Storage is Admin {
         return _getUserCommit(commiter);
     }
 
-    function getUserSubscribedCommits(address consumer) public view returns (Commit [] memory) {
+    function getUserSubscribedCommits(address user) public view returns (Commit [] memory) {
         
         uint32 valid = 0;
-        Subscribed memory info = UserSubscribed[consumer];
+        Subscribed memory info = UserSubscribed[user];
         for (uint32 i = 0; i < info.count; i++) {
             bytes32 hash = info.SubList[i];
             Commit memory cmt = getCommit(hash);
             if (cmt.block == 0) {
                 // not found.
-            } else if (cmt.verifiedBlock <= (block.number - 1000)) {
+            } else if (cmt.verifiedBlock <= (block.number - 10000)) {
                 // too old.
             } else {
                 valid++;
@@ -207,28 +207,31 @@ contract Storage is Admin {
     }
 
 
-    function _updateCommitSubscribe(bytes32 hash, address consumer) internal {
+    function _updateCommitSubscribe(address user, address consumer, bytes32 hash) internal {
         Commit memory commit = CommitPool[hash];
         require(commit.block != 0, "commit not found");
         require(commit.substatus == 0, "commit has been subscribed");
+
         commit.consumer = consumer;
+	commit.subsender = user;
         commit.subBlock = block.number;
         commit.substatus = 1;
         CommitPool[hash] = commit;
-        _addConsumerSubscribe(consumer, hash);
+        _addConsumerSubscribe(user, hash);
     }
 
-    function _updateCommitUnSubscribe(bytes32 hash, address consumer) internal {
+    function _updateCommitUnSubscribe(address user, bytes32 hash) internal {
         Commit memory commit = CommitPool[hash];
         require(commit.block != 0, "commit not found");
-        require(commit.consumer == consumer, "commit consumer not match");
+        require(commit.subsender == user, "commit subscribe user not match");
         require(commit.substatus == 1, "commit not been subscribed");
+	commit.subsender = address(0);
         commit.consumer = address(0);
         commit.subBlock = 0;
         commit.substatus = 0;
         CommitPool[hash] = commit;
 
-        _rmConsumerSubscribe(consumer, hash);
+        _rmConsumerSubscribe(user, hash);
     }
 
     function updateCommitVerified(address commiter, bytes32 hash, bytes32 seed) public {
@@ -247,7 +250,7 @@ contract Storage is Admin {
         _addToHistoryCommit(hash, commit);
     }
 
-    function updateCommitConsumed(address commiter, bytes32 hash, bytes32 seed) public {
+    function updateCommitConsumed(address commiter, bytes32 hash, bytes32 seed) public onlyCommiter {
         Commit memory commit = CommitPool[hash];
         require(commit.block != 0, "commit not found");
         require(commit.substatus == 1, "commit no subscribed");
@@ -264,14 +267,6 @@ contract Storage is Admin {
 
         // add to history.
         _addToHistoryCommit(hash, commit);
-    }
-
-    function _updateCommitSubscribe(address consumer, bytes32 hash) internal {
-        require(CommitPool[hash].block != 0, "commit not exist");
-        require(CommitPool[hash].substatus == 0, "commit has been subscribed");
-
-        CommitPool[hash].consumer = consumer;
-        CommitPool[hash].substatus = 1;
     }
 
     function _findSubableCommit() internal view returns (bool, Commit memory) {
@@ -298,11 +293,11 @@ contract Storage is Admin {
         return (find, commit);
     }
     
-    function subscribeCommit(address consumer, bytes32 hash) public {
-        _updateCommitSubscribe(hash, consumer);
+    function subscribeCommit(address user,address consumer, bytes32 hash) public onlyCommiter {
+        _updateCommitSubscribe(user, consumer, hash);
     }
 
-    function unsubscribeCommit(address consumer, bytes32 hash) public {
-        _updateCommitUnSubscribe(hash, consumer);
+    function unsubscribeCommit(address user, bytes32 hash) public onlyCommiter {
+        _updateCommitUnSubscribe(user, hash);
     }
 }

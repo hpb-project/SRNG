@@ -9,12 +9,15 @@ contract ComsumerExample is IConsumerBase, Admin {
 
     address [] players;
 
-    IOracle oracle = IOracle(0xd9145CCE52D386f254917e481eB44e9943F39138); // oracle address
+    IOracle oracle; // oracle address
 
     event GameWinner(address winner, uint256 block);
-
+    constructor(address _oracle) {
+	oracle = IOracle(_oracle);
+    }
+    
     function startNewGame() public onlyOwner {
-        oracle.requestRandom(address(this));
+        oracle.requestRandom(msg.sender, address(this));
     }
 
     function joinGame() public {

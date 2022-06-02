@@ -112,7 +112,6 @@ async function setting(contractMap) {
     tx = await token.setMinter(commiter.address);
     await tx.wait();
 }
-
 async function testCommit(contractMap) {
     var token = contractMap.get("token");
     var config = contractMap.get("config");
@@ -120,9 +119,7 @@ async function testCommit(contractMap) {
     var deposit = contractMap.get("deposit");
 
     var depositAmount = await config.getDepositAmount();
-    console.log("got depositAmount is", depositAmount);
     var depositwei = web3.utils.toWei(depositAmount.toString(), 'wei').toString();
-    console.log("deposit wei is ", depositwei);
     var t = await token.approve(deposit.address, depositwei);
     await t.wait();
 
@@ -136,15 +133,51 @@ async function testCommit(contractMap) {
 
     var storage = contractMap.get("storage");
     var commit = await storage.getCommit(hash);
-    console.log("get commit info", commit);
+}
+
+async function testCommitAndReveal(contractMap) {
+    var token = contractMap.get("token");
+    var config = contractMap.get("config");
+    var oracle = contractMap.get("oracle");
+    var deposit = contractMap.get("deposit");
+
+    var depositAmount = await config.getDepositAmount();
+    var depositwei = web3.utils.toWei(depositAmount.toString(), 'wei').toString();
+    var t = await token.approve(deposit.address, depositwei);
+    await t.wait();
+
+    var seed = "0x22c84307652ce1de54ce69fdbf6a9faf653c2d47d847daf05b9b6c62616d7b66";
+    var hash = await oracle.getHash(seed);
+    console.log("get hash is", hash);
+
+    var tx = await oracle.commit(hash);
+    await tx.wait();
+
+    var storage = contractMap.get("storage");
+    var commit = await storage.getCommit(hash);
 
     tx = await oracle.reveal(hash, seed);
     await tx.wait();
     console.log("reveal succeed with tx", tx.hash);
 
     commit = await storage.getCommit(hash);
-    console.log("get commit info", commit);
+}
 
+async function doSubscribe(contractMap) {
+    var config = contractMap.get("config");
+    var oracle= contractMap.get("oracle");
+    var token = contractMap.get("token");
+    var deposit = contractMap.get("deposit");
+    const ConsumerExample = await hre.ethers.getContractFactory("ComsumerExample");
+    const consumerContract = await ConsumerExample.deploy(oracle.address);
+    await consumerContract.deployed();
+    var fee = await config.getFee();
+    console.log("approve fee",fee);
+    var r = await token.approve(deposit.address,fee);
+    await r.wait();
+    var start = await consumerContract.startNewGame();
+	var receipt = await start.wait();
+	console.log("start game and subscribe succeed");
 }
 
 async function testCaclReward(contractMap) {
@@ -166,18 +199,44 @@ async function testCaclReward(contractMap) {
         "minted": "375000000000000000000000001",
         "expect": "25000000000000000000"
     }];
-    for (let tcase in testcase) {
-        var reward = await deposit.getRewards(tcase.minted);
-        console.log("got reward is ", reward, "expected", tcase.expect);
+    for (const tcase of testcase) {
+	    //console.log("tcase is ", tcase);
+	    var reward = await deposit.getRewards(tcase.minted);
+	    console.log("got reward is ", reward, "expected", tcase.expect);
     }
 }
 
+async function testCommitAndSubscribe(contractMap) {
+    var token = contractMap.get("token");
+    var config = contractMap.get("config");
+    var oracle = contractMap.get("oracle");
+    var deposit = contractMap.get("deposit");
+
+    var depositAmount = await config.getDepositAmount();
+    console.log("got depositAmount is", depositAmount);
+    var depositwei = web3.utils.toWei(depositAmount.toString(), 'wei').toString();
+    console.log("deposit wei is ", depositwei);
+    var t = await token.approve(deposit.address, depositwei);
+    await t.wait();
+
+    var seed = "0xf2c84307652ce1de54ce69fdbf6a9faf653c2d47d847daf05b9b6c62616d7b68";
+    var hash = await oracle.getHash(seed);
+    console.log("get hash is", hash);
+
+    var tx = await oracle.commit(hash);
+    await tx.wait();
+
+    var storage = contractMap.get("storage");
+    var commit = await storage.getCommit(hash);
+    await doSubscribe(contractMap);
+}
 
 async function main() {
     var contracts = await initDeploy();
+    await testCommitAndSubscribe(contracts);
+    await testCommitAndReveal(contracts);
     await testCommit(contracts);
-    await testCaclReward();
-
+    //await testCaclReward(contracts);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

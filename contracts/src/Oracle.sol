@@ -9,6 +9,7 @@ import "../interface/IDepositPool.sol";
 import "../common/Auth.sol";
 import "../common/Commit.sol";
 import "../interface/IStat.sol";
+import "hardhat/console.sol";
 
 // oracle is use to receive all request and find random to consumer.
 contract Oracle is Admin {
@@ -31,12 +32,13 @@ contract Oracle is Admin {
         stat = IStat(_stat);
     }
 
-    function requestRandom(address consumer) public returns (bool) {
+    // sender is user, consumer is contract address to use random.
+    function requestRandom(address user, address consumer) public returns (bool) {
         bool find;
         Commit memory info;
         (find, info) = store.findCommit();
         require(find == true, "Oracle::Not fund commit");
-        commitReveal.subScribeCommit(consumer, info.commit);
+        commitReveal.subScribeCommit(user, consumer, info.commit);
         emit Subscribe(consumer, info.author, info.commit, block.number);
         return true;
     }
@@ -62,7 +64,9 @@ contract Oracle is Admin {
     function reveal(bytes32 hash, bytes32 seed) public {
         bool consumed;
         Commit memory info;
+	console.log("goto call reveal");
         (consumed, info) = commitReveal.reveal(hash, seed, msg.sender);
+	console.log("after call reveal");
         emit RevealSeed(info.author, seed, block.number);
         if (consumed) {
             bytes32 random = commitReveal.genRandom(info);

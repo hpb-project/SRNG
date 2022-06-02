@@ -7,6 +7,6 @@ interface ICommitReveal {
     function reveal(bytes32, bytes32, address) external returns (bool, Commit memory);
     function getHash(bytes32) external view returns(bytes32);
     function genRandom(Commit memory) external view returns(bytes32);
-    function subScribeCommit(address, bytes32) external;
+    function subScribeCommit(address, address, bytes32) external;
     function unSubscribeCommit(address, bytes32) external;
 }
