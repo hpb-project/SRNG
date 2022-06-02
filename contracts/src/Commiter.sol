@@ -10,7 +10,7 @@ import "../common/Auth.sol";
 import "../common/Commit.sol";
 
 contract CommitReveal is Admin {
-	uint8 public minblocks = 1;
+	uint8 public minblocks = 0;
 	uint32 public maxblocks = 20000;
 
 	IERC20 			hrgToken;
@@ -77,7 +77,6 @@ contract CommitReveal is Admin {
 		// add stats.
 		stat.addVerifiedCommit(user);
 
-		// todo: mint new token for commiter.
 		uint256 reward = tokenPool.getRewards();
 		hrgToken.mint(user, reward);
 		bool consumed;
