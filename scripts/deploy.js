@@ -121,16 +121,26 @@ async function testCommit(contractMap) {
     var depositwei = web3.utils.toWei(depositAmount.toString(), 'wei').toString();
     console.log("deposit wei is ", depositwei);
     var t = await token.approve(deposit.address, depositwei);
-	await t.wait();
+    await t.wait();
 
-    var hash = "0xe2c84307652ce1de54ce69fdbf6a9faf653c2d47d847daf05b9b6c62616d7b63";
+    var seed = "0xe2c84307652ce1de54ce69fdbf6a9faf653c2d47d847daf05b9b6c62616d7b63";
+    var hash = await oracle.getHash(seed);
+    console.log("get hash is", hash);
+
     var tx = await oracle.commit(hash);
     await tx.wait();
-    console.log("commit succeed with tx", tx);
+    console.log("commit succeed with tx", tx.hash);
 
     var storage = contractMap.get("storage");
     var commit = await storage.getCommit(hash);
-	console.log("get commit info", commit);
+    console.log("get commit info", commit);
+
+    tx = await oracle.reveal(hash, seed);
+    await tx.wait();
+    console.log("reveal succeed with tx", tx.hash);
+
+    commit = await storage.getCommit(hash);
+
 }
 
 async function main() {
