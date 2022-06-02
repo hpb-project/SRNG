@@ -147,9 +147,36 @@ async function testCommit(contractMap) {
 
 }
 
+async function testCaclReward(contractMap) {
+    var deposit = contractMap.get("deposit");
+    var minted = "100000000000000000000";
+    var testcase = [{
+        "minted": "100000000000000000000",
+        "expect": "100000000000000000000"
+    }, {
+        "minted": "100000000000000000000000000",
+        "expect": "100000000000000000000"
+    }, {
+        "minted": "250000000000000000000000001",
+        "expect": "50000000000000000000"
+    }, {
+        "minted": "375000000000000000000000000",
+        "expect": "50000000000000000000"
+    }, {
+        "minted": "375000000000000000000000001",
+        "expect": "25000000000000000000"
+    }];
+    for (let tcase in testcase) {
+        var reward = await deposit.getRewards(tcase.minted);
+        console.log("got reward is ", reward, "expected", tcase.expect);
+    }
+}
+
+
 async function main() {
     var contracts = await initDeploy();
     await testCommit(contracts);
+    await testCaclReward();
 
 }
 
