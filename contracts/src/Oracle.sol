@@ -59,7 +59,7 @@ contract Oracle is Admin {
         commitReveal.commit(hash, msg.sender);
         emit CommitHash(msg.sender, hash, block.number);
     }
-    event CommitHash(address sender, bytes32 dataHash, uint256 block);
+    event CommitHash(address sender, bytes32 hash, uint256 block);
 
     function reveal(bytes32 hash, bytes32 seed) public {
         bool consumed;
@@ -67,14 +67,14 @@ contract Oracle is Admin {
 	console.log("goto call reveal");
         (consumed, info) = commitReveal.reveal(hash, seed, msg.sender);
 	console.log("after call reveal");
-        emit RevealSeed(info.author, seed, block.number);
+        emit RevealSeed(info.author, hash, seed, block.number);
         if (consumed) {
             bytes32 random = commitReveal.genRandom(info);
             emit RandomConsumed(info.author, info.consumer, random, block.number);
         }
     }
     event RandomConsumed(address commiter, address consumer, bytes32 random, uint256 block);
-    event RevealSeed(address commiter, bytes32 seed, uint256 block);
+    event RevealSeed(address commiter, bytes32 hash, bytes32 seed, uint256 block);
 
     function getCommiterValidCount(address commiter) public view returns (uint256) {
         return stat.getCommiterValidCount(commiter);
