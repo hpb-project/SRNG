@@ -6,4 +6,6 @@ interface IConfig {
     function getMaxUnverify() external view returns (uint256);
     function getDepositAmount() external view returns (uint256);
     function getUnSubBlocks() external view returns (uint256);
+    function getMinVerifyBlocks() external view returns (uint256);
+    function getMaxVerifyBlocks() external view returns (uint256);
 }

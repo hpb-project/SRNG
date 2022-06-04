@@ -5,6 +5,8 @@ import "../common/Auth.sol";
 contract Config is Admin {
     uint256 _fee = 150 ether;
     uint256 _max_unverify = 10; // max unverified record per committer
+    uint256 _max_veirfi_block = 1000; // max verify blocks from commit
+    uint256 _min_veirfi_block = 0; // min verify blocks from commit
     uint256 _deposit_amount = 100 ether;
     uint256 _unsub_blocks = 200; // max block count from subscribe to unsubscribe.
     
@@ -43,4 +45,21 @@ contract Config is Admin {
     function getUnSubBlocks() public view returns (uint256) {
         return _unsub_blocks;
     }
+
+    function setMinVerifyBlocks(uint256 blocks) public onlyAdmin {
+        _min_veirfi_block = blocks;
+    }
+
+    function getMinVerifyBlocks() public view returns (uint256) {
+        return _min_veirfi_block;
+    }
+
+    function setMaxVerifyBlocks(uint256 blocks) public onlyAdmin {
+        _max_veirfi_block = blocks;
+    }
+
+    function getMaxVerifyBlocks() public view returns (uint256) {
+        return _max_veirfi_block;
+    }
+
 }
