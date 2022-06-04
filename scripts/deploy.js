@@ -221,7 +221,6 @@ async function testCaclReward(contractMap) {
 async function testCommitAndSubscribe(contractMap) {
     var token = contractMap.get("token");
     var config = contractMap.get("config");
-	console.log("config is", config);
     var oracle = contractMap.get("oracle");
     var deposit = contractMap.get("deposit");
 
@@ -243,13 +242,13 @@ async function testCommitAndSubscribe(contractMap) {
     await doSubscribe(contractMap);
 }
 async function initialContract() {
-var token     = "0x864Dda775dd61B9E45D66A841A13DaA755380890";
-var deposit   = "0x3FDb09cF909C24953e980d3A3d4A15269ef25CDb";
-var config    = "0x33Ea76978f01020aa2b0b40cd0B47E17FcA7501C";
-var storage   = "0x3350C1BC87D327f41c0feb2C9b0cC67179b40ADC";
-var stats     = "0xaE039318642eb91662CaB22119eaa4C6c3B3ca2F";
-var commiter  = "0xDD77BC4Ba1CfD690B483c206Ad85C205F61329d1";
-var oracle    = "0x2d0B741A9F159939E0e797b4bdBD9Cd3b37D4d91";
+    var token     = "0x864Dda775dd61B9E45D66A841A13DaA755380890";
+    var deposit   = "0x3FDb09cF909C24953e980d3A3d4A15269ef25CDb";
+    var config    = "0x33Ea76978f01020aa2b0b40cd0B47E17FcA7501C";
+    var storage   = "0x3350C1BC87D327f41c0feb2C9b0cC67179b40ADC";
+    var stats     = "0xaE039318642eb91662CaB22119eaa4C6c3B3ca2F";
+    var commiter  = "0xDD77BC4Ba1CfD690B483c206Ad85C205F61329d1";
+    var oracle    = "0x2d0B741A9F159939E0e797b4bdBD9Cd3b37D4d91";
     var contractMap = new Map();
 
     const HRGToken = await hre.ethers.getContractAt("HRGToken", token);
@@ -270,19 +269,35 @@ var oracle    = "0x2d0B741A9F159939E0e797b4bdBD9Cd3b37D4d91";
     contractMap.set("oracle", Oracle);
     return contractMap;
 }
+async function getinfo(contractMap) {
+	const accounts = await hre.ethers.getSigners();
+	var user = accounts[0].address;
+	console.log("user is", user);
+	const oracle = contractMap.get("oracle");
+	var infos = await oracle.getUserUnverifiedList(user);
+	for (const info of infos) {
+		console.log("info is ", info);
+	}
+	var subs = await oracle.getUserSubscribed(user);
+	for (const sub of subs) {
+		console.log("sub is ", sub);
+	}
+}
 
 async function main() {
-    //var contracts = await initDeploy();
-    var contracts = await initialContract();
-    //await testCommitAndSubscribe(contracts);
-    await testCommit(contracts);
-    await testCommit(contracts);
-    await testCommitAndReveal(contracts);
-    await testCommitAndReveal(contracts);
-    await testCommit(contracts);
-    await testCommitAndReveal(contracts);
+    var contracts = await initDeploy();
+    //var contracts = await initialContract();
+    await testCommitAndSubscribe(contracts);
+
+    //await testCommit(contracts);
+    //await testCommit(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommit(contracts);
+    //await testCommitAndReveal(contracts);
 
     //await testCaclReward(contracts);
+    await getinfo(contracts);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
