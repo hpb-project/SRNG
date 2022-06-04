@@ -39,10 +39,10 @@ contract Oracle is Admin {
         (find, info) = store.findCommit();
         require(find == true, "Oracle::Not fund commit");
         commitReveal.subScribeCommit(user, consumer, info.commit);
-        emit Subscribe(consumer, info.author, info.commit, block.number);
+        emit Subscribe(consumer, info.author, info.commit, block.number, block.timestamp);
         return true;
     }
-    event Subscribe(address consumer, address commiter, bytes32 hash, uint256 block);
+    event Subscribe(address consumer, address commiter, bytes32 hash, uint256 block, uint256 time);
 
     function unsubscribeRandom(address consumer, bytes32 hash) public {
         Commit memory info = store.getCommit(hash);
@@ -51,15 +51,15 @@ contract Oracle is Admin {
         require((info.subBlock + unsubBlocks) >= block.number, "out of unsub max blockx");
 
         commitReveal.unSubscribeCommit(consumer, hash);
-        emit UnSubscribe(consumer, info.author, hash, block.number);
+        emit UnSubscribe(consumer, info.author, hash, block.number, block.timestamp);
     }
-    event UnSubscribe(address consumer, address commiter, bytes32 hash, uint256 block);
+    event UnSubscribe(address consumer, address commiter, bytes32 hash, uint256 block, uint256 time);
 
     function commit(bytes32 hash) public {
         commitReveal.commit(hash, msg.sender);
-        emit CommitHash(msg.sender, hash, block.number);
+        emit CommitHash(msg.sender, hash, block.number, block.timestamp);
     }
-    event CommitHash(address sender, bytes32 hash, uint256 block);
+    event CommitHash(address sender, bytes32 hash, uint256 block, uint256 time);
 
     function reveal(bytes32 hash, bytes32 seed) public {
         bool consumed;
@@ -67,14 +67,14 @@ contract Oracle is Admin {
 	console.log("goto call reveal");
         (consumed, info) = commitReveal.reveal(hash, seed, msg.sender);
 	console.log("after call reveal");
-        emit RevealSeed(info.author, hash, seed, block.number);
+        emit RevealSeed(info.author, hash, seed, block.number, block.timestamp);
         if (consumed) {
             bytes32 random = commitReveal.genRandom(info);
-            emit RandomConsumed(info.author, info.consumer, random, block.number);
+            emit RandomConsumed(info.author, info.consumer, random, block.number, block.timestamp);
         }
     }
-    event RandomConsumed(address commiter, address consumer, bytes32 random, uint256 block);
-    event RevealSeed(address commiter, bytes32 hash, bytes32 seed, uint256 block);
+    event RandomConsumed(address commiter, address consumer, bytes32 random, uint256 block, uint256 time);
+    event RevealSeed(address commiter, bytes32 hash, bytes32 seed, uint256 block, uint256 time);
 
     function getCommiterValidCount(address commiter) public view returns (uint256) {
         return stat.getCommiterValidCount(commiter);
