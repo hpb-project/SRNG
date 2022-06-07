@@ -37,6 +37,8 @@ contract Oracle is Admin {
         bool find;
         Commit memory info;
         (find, info) = store.findCommit();
+	console.log("request random");
+        console.logBool(find);
         require(find == true, "Oracle::Not fund commit");
         commitReveal.subScribeCommit(user, consumer, info.commit);
         emit Subscribe(consumer, info.author, info.commit, block.number, block.timestamp);
