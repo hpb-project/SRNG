@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 import "../common/Auth.sol";
 import "../common/Commit.sol";
+import "hardhat/console.sol";
 
 contract Storage is Admin {
     struct Unverified {
@@ -97,29 +98,33 @@ contract Storage is Admin {
     }
 
     function _addUnverifiedCommit(address commiter, bytes32 commit) internal {
-        if (UserCommits[commiter].count == 0) {
-            // new commiter
+        Unverified memory info = UserCommits[commiter];
+        if (info.count == 0) {
+            // add to commiter list.
             _addNewCommiter(commiter);
         }
-        UserCommits[commiter].count += 1;
-        UserCommits[commiter].CommitsList.push(commit);
+	if (info.CommitsList.length > info.count) {
+	    UserCommits[commiter].CommitsList[info.count] = commit;
+        } else {
+	    UserCommits[commiter].CommitsList.push(commit);
+        }
+	UserCommits[commiter].count += 1;
     }
 
     function _rmUnverifiedCommit(address commiter, bytes32 commit) internal {
-        bytes32[] storage list = UserCommits[commiter].CommitsList;
-        for (uint i = 0; i < list.length; i++) {
-            if (list[i] == commit) {
-                list[i] = list[list.length-1];
-                delete list[list.length-1];
-                break;
-            }
+	Unverified memory info = UserCommits[commiter];
+        for (uint i = 0; i < info.count; i++) {
+		if (info.CommitsList[i] == commit) {
+			UserCommits[commiter].CommitsList[i] = info.CommitsList[info.count-1];
+			delete UserCommits[commiter].CommitsList[info.count-1];
+			info.count -= 1;
+			UserCommits[commiter].count -= 1;
+			break;
+                }
         }
-        if (list.length == 0) {
+        if (info.count == 0) {
             delete UserCommits[commiter];
             _rmCommiter(commiter);
-        } else {
-            UserCommits[commiter].CommitsList = list;
-            UserCommits[commiter].count = uint32(list.length);
         }
         return ;
     }
@@ -273,9 +278,13 @@ contract Storage is Admin {
         for (uint256 i = 0; i < CommiterCount; i++) {
             address commiter = Commiters[i];
             Unverified memory ulist = UserCommits[commiter];
+            console.log("find commit for sub commiter is", commiter);
+	    console.log("ulist count",ulist.count);
 
             for (uint32 j = 0; j < ulist.count; j++) {
+		console.logBytes32(ulist.CommitsList[j]);
                 Commit memory commit = CommitPool[ulist.CommitsList[j]];
+		console.log("current commit block is ", commit.block);
                 if (commit.substatus == 0) {
                     return (true,commit);
                 }
@@ -294,6 +303,8 @@ contract Storage is Admin {
     }
     
     function subscribeCommit(address user,address consumer, bytes32 hash) public onlyCommiter {
+	console.log("subscribe hash is");
+	console.logBytes32(hash);
         _updateCommitSubscribe(user, consumer, hash);
     }
 

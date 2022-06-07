@@ -58,7 +58,6 @@ function printinfo(contractMap) {
 async function deploy_token(tokenFactory) {
     const token = await tokenFactory.deploy("100000000000000000000000000", "HRGToken", 18, "HRG");
     await token.deployed();
-    console.log("deployed token at ", token.address, "hash ", token.hash);
 
     return token;
 }
@@ -66,7 +65,6 @@ async function deploy_token(tokenFactory) {
 async function deploy_deposit(factory, token, commiter) {
     const contract = await factory.deploy(token.address, commiter.address);
     await contract.deployed();
-    console.log("deployed contract at ", contract.address, "hash ", contract.hash);
 
     return contract;
 }
@@ -74,7 +72,6 @@ async function deploy_deposit(factory, token, commiter) {
 async function deploy_contract(factory, name) {
     const contract = await factory.deploy();
     await contract.deployed();
-    console.log("deployed contract at ", contract.address, "hash ", contract.hash);
 
     return contract;
 }
@@ -82,7 +79,6 @@ async function deploy_contract(factory, name) {
 async function deploy_with_oracle(factory, oracle) {
     const contract = await factory.deploy(oracle.address);
     await contract.deployed();
-    console.log("deployed contract at ", contract.address, "hash ", contract.hash);
 
     return contract;
 }
@@ -90,7 +86,6 @@ async function deploy_with_oracle(factory, oracle) {
 async function deploy_with_commiter(factory, commiter) {
     const contract = await factory.deploy(commiter.address);
     await contract.deployed();
-    console.log("deployed contract at ", contract.address, "hash ", contract.hash);
 
     return contract;
 }
@@ -134,12 +129,11 @@ async function testCommit(contractMap) {
 
     var seed = genrandom();
     var hash = await oracle.getHash(seed);
-    console.log("seed is ", seed);
-    console.log("hash is ",hash);
+    console.log("hash is", hash,"seed is", seed);
 
     var tx = await oracle.commit(hash);
     await tx.wait();
-    console.log("commit succeed with tx", tx.hash);
+    console.log("commit succeed");
 
     var storage = contractMap.get("storage");
     var commit = await storage.getCommit(hash);
@@ -158,19 +152,18 @@ async function testCommitAndReveal(contractMap) {
 
     var seed = genrandom();
     var hash = await oracle.getHash(seed);
-    console.log("seed is ", seed);
-    console.log("hash is ",hash);
+    console.log("hash is", hash,"seed is", seed);
 
     var tx = await oracle.commit(hash);
     await tx.wait();
-    console.log("commit succeed with tx", tx.hash);
+    console.log("commit succeed");
 
     var storage = contractMap.get("storage");
     var commit = await storage.getCommit(hash);
 
     tx = await oracle.reveal(hash, seed, {gasLimit:10000000});
     await tx.wait();
-    console.log("reveal succeed with tx", tx.hash);
+    console.log("reveal succeed");
 
     commit = await storage.getCommit(hash);
 }
@@ -184,12 +177,11 @@ async function doSubscribe(contractMap) {
     const consumerContract = await ConsumerExample.deploy(oracle.address);
     await consumerContract.deployed();
     var fee = await config.getFee();
-    console.log("approve fee",fee);
     var r = await token.approve(deposit.address,fee);
     await r.wait();
     var start = await consumerContract.startNewGame();
-	var receipt = await start.wait();
-	console.log("start game and subscribe succeed");
+    var receipt = await start.wait();
+    console.log("subscribe succeed");
 }
 
 async function testCaclReward(contractMap) {
@@ -231,11 +223,11 @@ async function testCommitAndSubscribe(contractMap) {
 
     var seed = genrandom();
     var hash = await oracle.getHash(seed);
-    console.log("seed is", seed);
-    console.log("hash is", hash);
+    console.log("hash is", hash,"seed is", seed);
 
     var tx = await oracle.commit(hash);
     await tx.wait();
+    console.log("commit succeed");
 
     var storage = contractMap.get("storage");
     var commit = await storage.getCommit(hash);
@@ -278,26 +270,52 @@ async function getinfo(contractMap) {
 	for (const info of infos) {
 		console.log("info is ", info);
 	}
+	for (let i=0; i < infos.length; i++) {
+		const info = infos[i];
+		console.log("info at", i, "is ", info);
+	}
 	var subs = await oracle.getUserSubscribed(user);
-	for (const sub of subs) {
-		console.log("sub is ", sub);
+	for (let i=0; i < subs.length; i++) {
+		const sub= subs[i];
+		console.log("sub at", i, "is ", sub);
 	}
 }
 
 async function main() {
     var contracts = await initDeploy();
     //var contracts = await initialContract();
+    await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+
+    //await testCommitAndSubscribe(contracts);
+
+    //await testCommit(contracts);
+    //await testCommit(contracts);
+    //await testCommit(contracts);
+    //await testCommit(contracts);
+    //await testCommit(contracts);
+
+    await testCommitAndSubscribe(contracts);
+    await testCommitAndSubscribe(contracts);
+    await testCommitAndSubscribe(contracts);
+    await testCommitAndSubscribe(contracts);
+    await testCommitAndSubscribe(contracts);
     await testCommitAndSubscribe(contracts);
 
     //await testCommit(contracts);
     //await testCommit(contracts);
-    //await testCommitAndReveal(contracts);
-    //await testCommitAndReveal(contracts);
     //await testCommit(contracts);
     //await testCommitAndReveal(contracts);
 
     //await testCaclReward(contracts);
     await getinfo(contracts);
+    await doSubscribe(contracts);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
