@@ -108,6 +108,39 @@ async function setting(contractMap) {
     await tx.wait();
 }
 
+async function getconfig(contractMap) {
+    var config = contractMap.get("config");
+
+    var value = await config.getDepositAmount();
+    console.log("config deposit amount is", value);
+
+    value = await config.getFee();
+    console.log("config fee amount is", value);
+
+    value = await config.getMaxUnverify();
+    console.log("config maxUnverify is", value);
+
+    value = await config.getUnSubBlocks();
+    console.log("config unsub blocks is", value);
+
+    value = await config.getMaxVerifyBlocks();
+    console.log("config max veirfy blocks is", value);
+}
+
+async function testsetting(contractMap) {
+    var config = contractMap.get("config");
+
+    var tx = await config.setMaxUnverify(10000);
+    await tx.wait();
+
+    tx = await config.setUnSubBlocks(100000);
+    await tx.wait();
+
+    tx = await config.setMaxVerifyBlocks(100000);
+    await tx.wait();
+
+}
+
 function genrandom() {
 	const hexString = Array(64)
 	  .fill()
@@ -234,13 +267,13 @@ async function testCommitAndSubscribe(contractMap) {
     await doSubscribe(contractMap);
 }
 async function initialContract() {
-    var token     = "0x864Dda775dd61B9E45D66A841A13DaA755380890";
-    var deposit   = "0x3FDb09cF909C24953e980d3A3d4A15269ef25CDb";
-    var config    = "0x33Ea76978f01020aa2b0b40cd0B47E17FcA7501C";
-    var storage   = "0x3350C1BC87D327f41c0feb2C9b0cC67179b40ADC";
-    var stats     = "0xaE039318642eb91662CaB22119eaa4C6c3B3ca2F";
-    var commiter  = "0xDD77BC4Ba1CfD690B483c206Ad85C205F61329d1";
-    var oracle    = "0x2d0B741A9F159939E0e797b4bdBD9Cd3b37D4d91";
+    var token     = "0xb773587F6383B60134333DEF3035633F9E42F979";
+    var deposit   = "0x2621d0486a7b15819F855adCd0Ea57bd44c738c2";
+    var config    = "0x609914E4d56e66F1f6F4176343dD48BBd3A34Ea0";
+    var storage   = "0x06dcfED4c4947F0f6e996561C3aBC959Dd08171E";
+    var stats     = "0xd6BBF296449dA619407b8A86d7494422FE786849";
+    var commiter  = "0xC6FdbbADFd72ff3ead541529735e3a19B690758b";
+    var oracle    = "0xF525B4882fF518c281d7bE21D45dc6CAb12ef115";
     var contractMap = new Map();
 
     const HRGToken = await hre.ethers.getContractAt("HRGToken", token);
@@ -282,9 +315,10 @@ async function getinfo(contractMap) {
 }
 
 async function main() {
-    var contracts = await initDeploy();
-    //var contracts = await initialContract();
-    await testCommitAndReveal(contracts);
+    //var contracts = await initDeploy();
+    //await testsetting(contracts);
+    var contracts = await initialContract();
+    await getconfig(contracts);
     //await testCommitAndReveal(contracts);
     //await testCommitAndReveal(contracts);
     //await testCommitAndReveal(contracts);
@@ -292,21 +326,22 @@ async function main() {
     //await testCommitAndReveal(contracts);
     //await testCommitAndReveal(contracts);
     //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+
+    await testCommitAndSubscribe(contracts);
+    await testCommitAndSubscribe(contracts);
+    await testCommitAndSubscribe(contracts);
+    await testCommitAndSubscribe(contracts);
+
+    await testCommit(contracts);
+    await testCommit(contracts);
+    await testCommit(contracts);
+    await testCommit(contracts);
+    await testCommit(contracts);
 
     //await testCommitAndSubscribe(contracts);
-
-    //await testCommit(contracts);
-    //await testCommit(contracts);
-    //await testCommit(contracts);
-    //await testCommit(contracts);
-    //await testCommit(contracts);
-
-    await testCommitAndSubscribe(contracts);
-    await testCommitAndSubscribe(contracts);
-    await testCommitAndSubscribe(contracts);
-    await testCommitAndSubscribe(contracts);
-    await testCommitAndSubscribe(contracts);
-    await testCommitAndSubscribe(contracts);
+    //await testCommitAndSubscribe(contracts);
+    //await testCommitAndSubscribe(contracts);
 
     //await testCommit(contracts);
     //await testCommit(contracts);
