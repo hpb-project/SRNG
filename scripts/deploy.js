@@ -54,10 +54,14 @@ function printinfo(contractMap) {
     console.log("deploy commiter  at address", commiter.address);
     console.log("deploy oracle    at address", oracle.address);
 }
-
+function sleep (time) {
+	  return new Promise((resolve) => setTimeout(resolve, time));
+}
+var duration = 6000;
 async function deploy_token(tokenFactory) {
     const token = await tokenFactory.deploy("100000000000000000000000000", "HRGToken", 18, "HRG");
     await token.deployed();
+    sleep(duration);
 
     return token;
 }
@@ -65,6 +69,7 @@ async function deploy_token(tokenFactory) {
 async function deploy_deposit(factory, token, commiter) {
     const contract = await factory.deploy(token.address, commiter.address);
     await contract.deployed();
+    sleep(duration);
 
     return contract;
 }
@@ -73,6 +78,7 @@ async function deploy_contract(factory, name) {
     const contract = await factory.deploy();
     await contract.deployed();
 
+    sleep(duration);
     return contract;
 }
 
@@ -80,12 +86,14 @@ async function deploy_with_oracle(factory, oracle) {
     const contract = await factory.deploy(oracle.address);
     await contract.deployed();
 
+    sleep(duration);
     return contract;
 }
 
 async function deploy_with_commiter(factory, commiter) {
     const contract = await factory.deploy(commiter.address);
     await contract.deployed();
+    sleep(duration);
 
     return contract;
 }
@@ -101,11 +109,14 @@ async function setting(contractMap) {
 
     var tx = await commiter.setAddress(token.address, config.address, deposit.address, stats.address, storage.address);
     await tx.wait();
+    sleep(duration);
     tx = await oracle.setting(token.address, config.address, deposit.address, storage.address, commiter.address, stats.address);
     await tx.wait();
 
+    sleep(duration);
     tx = await token.setMinter(commiter.address);
     await tx.wait();
+    sleep(duration);
 }
 
 async function getconfig(contractMap) {
@@ -132,12 +143,15 @@ async function testsetting(contractMap) {
 
     var tx = await config.setMaxUnverify(10000);
     await tx.wait();
+    sleep(duration);
 
     tx = await config.setUnSubBlocks(100000);
     await tx.wait();
 
+    sleep(duration);
     tx = await config.setMaxVerifyBlocks(100000);
     await tx.wait();
+    sleep(duration);
 
 }
 
@@ -167,6 +181,7 @@ async function testCommit(contractMap) {
     var tx = await oracle.commit(hash);
     await tx.wait();
     console.log("commit succeed");
+    sleep(duration);
 
     var storage = contractMap.get("storage");
     var commit = await storage.getCommit(hash);
@@ -190,12 +205,14 @@ async function testCommitAndReveal(contractMap) {
     var tx = await oracle.commit(hash);
     await tx.wait();
     console.log("commit succeed");
+    sleep(duration);
 
     var storage = contractMap.get("storage");
     var commit = await storage.getCommit(hash);
 
     tx = await oracle.reveal(hash, seed, {gasLimit:10000000});
     await tx.wait();
+    sleep(duration);
     console.log("reveal succeed");
 
     commit = await storage.getCommit(hash);
@@ -214,7 +231,8 @@ async function doSubscribe(contractMap) {
     await r.wait();
     var start = await consumerContract.startNewGame();
     var receipt = await start.wait();
-    console.log("subscribe succeed");
+    sleep(duration);
+    console.log("subscribe succeed", "tx hash", receipt.transactionHash);
 }
 
 async function testCaclReward(contractMap) {
@@ -260,6 +278,7 @@ async function testCommitAndSubscribe(contractMap) {
 
     var tx = await oracle.commit(hash);
     await tx.wait();
+    sleep(duration);
     console.log("commit succeed");
 
     var storage = contractMap.get("storage");
@@ -267,13 +286,21 @@ async function testCommitAndSubscribe(contractMap) {
     await doSubscribe(contractMap);
 }
 async function initialContract() {
-    var token     = "0xb773587F6383B60134333DEF3035633F9E42F979";
-    var deposit   = "0x2621d0486a7b15819F855adCd0Ea57bd44c738c2";
-    var config    = "0x609914E4d56e66F1f6F4176343dD48BBd3A34Ea0";
-    var storage   = "0x06dcfED4c4947F0f6e996561C3aBC959Dd08171E";
-    var stats     = "0xd6BBF296449dA619407b8A86d7494422FE786849";
-    var commiter  = "0xC6FdbbADFd72ff3ead541529735e3a19B690758b";
-    var oracle    = "0xF525B4882fF518c281d7bE21D45dc6CAb12ef115";
+    var token     = "0xaB06f2bEd629106236dA27fdc41E90654aD75C09";
+    var deposit   = "0xd834452287dcCF0cf40F14CF252E593bC9191a78";
+    var config    = "0x4E3aa47E2a6ac00918Bd819294eCe17235EfA986";
+    var storage   = "0xe1A2B42328B4a893291Cc73f2e34040A2bC851DD";
+    var stats     = "0xF5b4ae61493ddd81118D23d01670e362f0B369DA";
+    var commiter  = "0x5C679979d49a28cC6243CF511837c41219529410";
+    var oracle    = "0x800B5105b31bD100bE85E8646f86EA263aDB1786";
+
+    //var token     = "0xe734DC898A3380e915f3C43A49418674d5CF83c8";
+    //var deposit   = "0x19E0376e240DfbBeD0b04D9397F7E70DB6810ecD";
+    //var config    = "0x6a47ca8064426091536bB20D87C049D0080D3aD1";
+    //var storage   = "0x9C067d3893c14c41CAa27040C6C5a28A235cd684";
+    //var stats     = "0x4429e38D2ec69e95C32D7B2D21C58d5d35869D77";
+    //var commiter  = "0x4670a5737f8d321a603d35e9A71f12D8D8D2C111";
+    //var oracle    = "0x9f23858bF809f9FF06960690A5Ecb49F22Ef1fAe";
     var contractMap = new Map();
 
     const HRGToken = await hre.ethers.getContractAt("HRGToken", token);
@@ -299,15 +326,16 @@ async function getinfo(contractMap) {
 	var user = accounts[0].address;
 	console.log("user is", user);
 	const oracle = contractMap.get("oracle");
+	const storage = contractMap.get("storage");
 	var infos = await oracle.getUserUnverifiedList(user);
-	for (const info of infos) {
-		console.log("info is ", info);
-	}
 	for (let i=0; i < infos.length; i++) {
 		const info = infos[i];
 		console.log("info at", i, "is ", info);
 	}
-	var subs = await oracle.getUserSubscribed(user);
+//	var subinfo = await storage.getUserSubsInfo(user);
+//	console.log("get usdr subscribe info is", subinfo.);
+	var subs = await storage.getUserSubscribedCommits(user);
+	//console.log("get user subscribed is ", subs);
 	for (let i=0; i < subs.length; i++) {
 		const sub= subs[i];
 		console.log("sub at", i, "is ", sub);
@@ -318,7 +346,7 @@ async function main() {
     //var contracts = await initDeploy();
     //await testsetting(contracts);
     var contracts = await initialContract();
-    await getconfig(contracts);
+    //await getconfig(contracts);
     //await testCommitAndReveal(contracts);
     //await testCommitAndReveal(contracts);
     //await testCommitAndReveal(contracts);
@@ -333,11 +361,11 @@ async function main() {
     await testCommitAndSubscribe(contracts);
     await testCommitAndSubscribe(contracts);
 
+    //await testCommit(contracts);
     await testCommit(contracts);
     await testCommit(contracts);
     await testCommit(contracts);
-    await testCommit(contracts);
-    await testCommit(contracts);
+    //await testCommit(contracts);
 
     //await testCommitAndSubscribe(contracts);
     //await testCommitAndSubscribe(contracts);
@@ -350,7 +378,7 @@ async function main() {
 
     //await testCaclReward(contracts);
     await getinfo(contracts);
-    await doSubscribe(contracts);
+    //await doSubscribe(contracts);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
