@@ -63,10 +63,11 @@ contract CommitReveal is Admin {
 	function reveal(bytes32 hash, bytes32 seed, address user) public onlyOracle returns (bool, Commit memory) {
 		Commit memory info = store.getCommit(hash);
 		uint256 maxverifyblock = config.getMaxVerifyBlocks();
+		uint256 minverifyblock = config.getMinVerifyBlocks();
 		
 		require(info.block != 0, "CommitReveal::reveal: Have no commit need reveal");
 		require(info.revealed==false,"CommitReveal::reveal: Already revealed");
-		require(uint64(block.number)>info.block,"CommitReveal::reveal: Reveal and commit happened on the same block");
+		require(uint64(block.number)>=(info.block+minverifyblock),"CommitReveal::reveal: Reveal too quickly");
 		require(uint64(block.number)<=(info.block+maxverifyblock),"CommitReveal::reveal: Revealed too late");
 
 		//require that they can produce the committed hash
