@@ -12,7 +12,7 @@ contract Storage is Admin {
 
     struct Subscribed {
         bool exist;
-        uint32 count;
+        uint256 count;
         bytes32 [] SubList;
     }
 
@@ -38,17 +38,21 @@ contract Storage is Admin {
 
     function _addConsumerSubscribe(address consumer, bytes32 hash) internal {
         if (UserSubscribed[consumer].exist) {
+	    console.log("consumer has exist");
             Subscribed memory info = UserSubscribed[consumer];
-            if (info.count <= info.SubList.length) {
-                UserSubscribed[consumer].SubList.push(hash);
-            } else {
+            if (info.count < info.SubList.length) {
                 UserSubscribed[consumer].SubList[info.count] = hash;
+	        UserSubscribed[consumer].count++;
+            } else {
+                UserSubscribed[consumer].SubList.push(hash);
+                UserSubscribed[consumer].count = UserSubscribed[consumer].SubList.length;
             }
-            UserSubscribed[consumer].count++;
+
         } else {
+	    console.log("consumer has not exist");
             UserSubscribed[consumer].exist = true;
             UserSubscribed[consumer].SubList.push(hash);
-            UserSubscribed[consumer].count ++;
+            UserSubscribed[consumer].count = UserSubscribed[consumer].SubList.length;
         }
     }
 
@@ -61,6 +65,7 @@ contract Storage is Admin {
                 delete(info.SubList[info.count-1]);
                 info.count--;
                 UserSubscribed[consumer] = info;
+		break;
             }
         }
     }
@@ -131,9 +136,10 @@ contract Storage is Admin {
 
     // get user unverified commits.
     function _getUserCommit(address commiter) public view returns (Commit [] memory) {
-        bytes32 [] memory list = UserCommits[commiter].CommitsList;
-        Commit [] memory commits = new Commit[](list.length); 
-        for (uint i = 0; i < list.length; i++) {
+	Unverified memory info = UserCommits[commiter];
+        bytes32 [] memory list = info.CommitsList;
+        Commit [] memory commits = new Commit[](info.count); 
+        for (uint i = 0; i < info.count; i++) {
             bytes32 h = list[i];
             commits[i] = CommitPool[h];
         }
@@ -174,6 +180,10 @@ contract Storage is Admin {
     function getUserUnverifiedCommits(address commiter) public view returns (Commit [] memory) {
         return _getUserCommit(commiter);
     }
+    function getUserSubsInfo(address user) public view returns(Subscribed memory) {
+        Subscribed memory info = UserSubscribed[user];
+	return info;
+    }
 
     function getUserSubscribedCommits(address user) public view returns (Commit [] memory) {
         
@@ -184,7 +194,7 @@ contract Storage is Admin {
             Commit memory cmt = getCommit(hash);
             if (cmt.block == 0) {
                 // not found.
-            } else if ((cmt.verifiedBlock + 100000 )<= block.number ) {
+            } else if (cmt.verifiedBlock != 0 && ( block.number >= (cmt.verifiedBlock + 100000 ))) {
                 // too old.
             } else {
                 valid++;
