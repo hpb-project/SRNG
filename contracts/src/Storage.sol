@@ -194,7 +194,7 @@ contract Storage is Admin {
             Commit memory cmt = getCommit(hash);
             if (cmt.block == 0) {
                 // not found.
-            } else if (cmt.verifiedBlock != 0 && ( block.number >= (cmt.verifiedBlock + 100000 ))) {
+            } else if (cmt.verifiedBlock != 0 && ( block.number >= (cmt.verifiedBlock + 500000 ))) {
                 // too old.
             } else {
                 valid++;
@@ -211,7 +211,7 @@ contract Storage is Admin {
             Commit memory cmt = getCommit(hash);
             if (cmt.block == 0) {
                 // not found.
-            } else if ((cmt.verifiedBlock + 100000 )<= block.number ) {
+            } else if (cmt.verifiedBlock != 0 && ( block.number >= (cmt.verifiedBlock + 500000 ))) {
                 // too old.
             } else {
                 commits[idx] = cmt;
