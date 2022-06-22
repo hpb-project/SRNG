@@ -1,48 +1,38 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// When running the script with `npx hardhat run <script>` you'll find the Hardhat
-// Runtime Environment's members available in the global scope.
 const hre = require("hardhat");
 
-async function doSubscribe(contractMap) {
-    var config = contractMap.get("config");
-    var oracle = contractMap.get("oracle");
-    var token = contractMap.get("token");
-    var deposit = contractMap.get("deposit");
-
+async function deployConsumer() {
     const ConsumerExample = await hre.ethers.getContractFactory("ComsumerExample");
-    const consumerContract = await ConsumerExample.deploy(oracle.address);
+    const consumerContract = await ConsumerExample.deploy();
     await consumerContract.deployed();
 
-    var fee = await config.getFee();
-    console.log("approve fee", fee);
+    return consumerContract;
+}
 
-    var r = await token.approve(deposit.address, fee);
+async function doSubscribe(consumerContract) {
+    var deposit     = "0xd834452287dcCF0cf40F14CF252E593bC9191a78"; // deposit contract address on mainnet.
+    var tokenAddr   = "0xaB06f2bEd629106236dA27fdc41E90654aD75C09"; // hrgtoken contract address on mainnet.
+    var configAddr  = "0x4E3aa47E2a6ac00918Bd819294eCe17235EfA986"; // config contract address on mainnet.
+
+    const token = await hre.ethers.getContractAt("HRGToken", tokenAddr);
+    const config = await hre.ethers.getContractAt("Config", configAddr);
+
+    var fee = await config.getFee();
+    console.log("approve fee to deposit");
+
+    var r = await token.approve(deposit, fee);
     await r.wait();
 
     var start = await consumerContract.startNewGame();
-    var receipt = await start.wait();
+    await start.wait();
     console.log("start game and subscribe succeed");
 }
 
-
-
 async function main() {
-    // Hardhat always runs the compile task when running scripts with its command
-    // line interface.
-    //
-    // If this script is run directly using `node` you may want to call compile
-    // manually to make sure everything is compiled
-    // await hre.run('compile');
-
-    // We get the contract to deploy
-    const Greeter = await hre.ethers.getContractFactory("Greeter");
-    const greeter = await Greeter.deploy("Hello, Hardhat!");
-
-    await greeter.deployed();
-
-    console.log("Greeter deployed to:", greeter.address);
+    var consumerContract = await deployConsumer();
+    for (let i=0; i < 10; i++) {
+		await doSubscribe(consumerContract);
+	}
+    console.log("deploy and subscribe finished");
 }
 
 // We recommend this pattern to be able to use async/await everywhere
