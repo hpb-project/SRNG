@@ -1,15 +1,10 @@
-# Basic Sample Hardhat Project
-
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts.
-
-Try running some of the following tasks:
-
-```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
-npx hardhat test
-npx hardhat node
-node scripts/sample-script.js
-npx hardhat help
+## Consume random
+There is a example contract for consume random, and you can run it follow the steps.
 ```
+git clone https://github.com/hpb-project/SRNG
+cd SRNG
+modify runconsume.sh and fill PRIVATE_KEY with your own value
+npm install
+./runconsume.sh
+```
+And you can also modify the code in `contracts/example/Consumer.sol` according to your needs
