@@ -1,6 +1,9 @@
 const hre = require("hardhat");
 const web3 = require("web3");
 
+function sleep (time) {
+	  return new Promise((resolve) => setTimeout(resolve, time));
+}
 function genrandom() {
 	const hexString = Array(64)
 	  .fill()
