@@ -55,7 +55,8 @@ function printinfo(contractMap) {
     console.log("deploy oracle    at address", oracle.address);
 }
 function sleep (time) {
-	  return new Promise((resolve) => setTimeout(resolve, time));
+    return ;
+	//   return new Promise((resolve) => setTimeout(resolve, time));
 }
 var duration = 6000;
 async function deploy_token(tokenFactory) {
@@ -171,7 +172,7 @@ async function testCommit(contractMap) {
 
     var depositAmount = await config.getDepositAmount();
     var depositwei = web3.utils.toWei(depositAmount.toString(), 'wei').toString();
-    var t = await token.approve(deposit.address, depositwei);
+    var t = await token.approve(oracle.address, depositwei);
     await t.wait();
 
     var seed = genrandom();
@@ -195,7 +196,7 @@ async function testCommitAndReveal(contractMap) {
 
     var depositAmount = await config.getDepositAmount();
     var depositwei = web3.utils.toWei(depositAmount.toString(), 'wei').toString();
-    var t = await token.approve(deposit.address, depositwei);
+    var t = await token.approve(oracle.address, depositwei);
     await t.wait();
 
     var seed = genrandom();
@@ -227,7 +228,7 @@ async function doSubscribe(contractMap) {
     const consumerContract = await ConsumerExample.deploy(oracle.address);
     await consumerContract.deployed();
     var fee = await config.getFee();
-    var r = await token.approve(deposit.address,fee);
+    var r = await token.approve(oracle.address,fee);
     await r.wait();
     var start = await consumerContract.startNewGame();
     var receipt = await start.wait();
@@ -269,7 +270,7 @@ async function testCommitAndSubscribe(contractMap) {
 
     var depositAmount = await config.getDepositAmount();
     var depositwei = web3.utils.toWei(depositAmount.toString(), 'wei').toString();
-    var t = await token.approve(deposit.address, depositwei);
+    var t = await token.approve(oracle.address, depositwei);
     await t.wait();
 
     var seed = genrandom();
@@ -343,18 +344,18 @@ async function getinfo(contractMap) {
 }
 
 async function main() {
-    //var contracts = await initDeploy();
-    //await testsetting(contracts);
-    var contracts = await initialContract();
+    var contracts = await initDeploy();
+    await testsetting(contracts);
+    // var contracts = await initialContract();
     //await getconfig(contracts);
-    //await testCommitAndReveal(contracts);
-    //await testCommitAndReveal(contracts);
-    //await testCommitAndReveal(contracts);
-    //await testCommitAndReveal(contracts);
-    //await testCommitAndReveal(contracts);
-    //await testCommitAndReveal(contracts);
-    //await testCommitAndReveal(contracts);
-    //await testCommitAndReveal(contracts);
+    await testCommitAndReveal(contracts);
+    await testCommitAndReveal(contracts);
+    await testCommitAndReveal(contracts);
+    await testCommitAndReveal(contracts);
+    await testCommitAndReveal(contracts);
+    await testCommitAndReveal(contracts);
+    await testCommitAndReveal(contracts);
+    await testCommitAndReveal(contracts);
 
     await testCommitAndSubscribe(contracts);
     await testCommitAndSubscribe(contracts);

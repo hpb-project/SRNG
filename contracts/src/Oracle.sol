@@ -37,9 +37,12 @@ contract Oracle is Admin {
         bool find;
         Commit memory info;
         (find, info) = store.findCommit();
-	console.log("request random");
-        console.logBool(find);
         require(find == true, "Oracle::Not fund commit");
+        uint256 fee = config.getFee();
+		uint256 balance = hrgtoken.balanceOf(user);
+		require(balance >= fee, "Oracle::Not enough token for fee");
+        require(hrgtoken.transferFrom(user, address(tokenPool), fee), "Oracle::Transfer fee failed");
+
         commitReveal.subScribeCommit(user, consumer, info.commit);
         emit Subscribe(consumer, info.author, info.commit, block.number, block.timestamp);
         return true;
@@ -57,7 +60,14 @@ contract Oracle is Admin {
     }
     event UnSubscribe(address consumer, address commiter, bytes32 hash, uint256 block, uint256 time);
 
+
     function commit(bytes32 hash) public {
+   		// deposit token.
+		uint256 amount = config.getDepositAmount();
+		uint256 balance = hrgtoken.balanceOf(msg.sender);
+		require(balance >= amount, "have no enough token for deposit");
+        require(hrgtoken.transferFrom(msg.sender, address(tokenPool), amount), "transfer failed");
+
         commitReveal.commit(hash, msg.sender);
         emit CommitHash(msg.sender, hash, block.number, block.timestamp);
     }

@@ -43,12 +43,6 @@ contract CommitReveal is Admin {
 
 		require(store.checkExist(hash) == false, "commit hash has exist");
 
-		// deposit token.
-		uint256 amount = config.getDepositAmount();
-		uint256 balance = hrgToken.balanceOf(user);
-		require(balance >= amount, "have no enough token for deposit");
-		tokenPool.deposit(user, amount);
-
 		Commit memory cmt;
 
 		cmt.author = user;
@@ -119,11 +113,7 @@ contract CommitReveal is Admin {
 	}
 
 	function subScribeCommit(address user, address consumer, bytes32 hash) public onlyOracle {
-		uint256 fee = config.getFee();
-		uint256 balance = hrgToken.balanceOf(user);
-		require(balance >= fee, "CommitReveal::Not enough token for fee");
 		store.subscribeCommit(user, consumer, hash);
-		tokenPool.deposit(user, fee);
 	}
 
 	function unSubscribeCommit(address user, bytes32 hash) public onlyOracle {

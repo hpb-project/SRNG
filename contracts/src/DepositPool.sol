@@ -41,10 +41,6 @@ contract DepositPool is Admin {
         return _calcReward(minted);
     }
 
-    function deposit(address user, uint256 amount) public onlyCommiter {
-        hrgToken.transferFrom(user, address(this), amount);
-    }
-
     function withdraw(address user, uint256 amount) public onlyCommiter {
         hrgToken.transfer(user, amount);
     }
