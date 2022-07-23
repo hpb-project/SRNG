@@ -331,7 +331,7 @@ async function getinfo(contractMap) {
 	var infos = await oracle.getUserUnverifiedList(user);
 	for (let i=0; i < infos.length; i++) {
 		const info = infos[i];
-		console.log("info at", i, "is ", info);
+		console.log("unverified info at", i, "is ", info);
 	}
 //	var subinfo = await storage.getUserSubsInfo(user);
 //	console.log("get usdr subscribe info is", subinfo.);
@@ -339,7 +339,13 @@ async function getinfo(contractMap) {
 	//console.log("get user subscribed is ", subs);
 	for (let i=0; i < subs.length; i++) {
 		const sub= subs[i];
-		console.log("sub at", i, "is ", sub);
+		console.log("subinfo at", i, "is ", sub);
+	}
+
+	var allinfos = await oracle.getUserCommitsList(user);
+	for (let i=0; i < allinfos.length; i++) {
+		const info = allinfos[i];
+		console.log("allinfo at", i, "is ", info);
 	}
 }
 

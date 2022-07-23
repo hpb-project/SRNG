@@ -44,7 +44,6 @@ contract Storage is Admin {
 
     function _addConsumerSubscribe(address consumer, bytes32 hash) internal {
         if (UserSubscribed[consumer].exist) {
-	    console.log("consumer has exist");
             Subscribed memory info = UserSubscribed[consumer];
             if (info.count < info.SubList.length) {
                 UserSubscribed[consumer].SubList[info.count] = hash;
@@ -55,7 +54,6 @@ contract Storage is Admin {
             }
 
         } else {
-	    console.log("consumer has not exist");
             UserSubscribed[consumer].exist = true;
             UserSubscribed[consumer].SubList.push(hash);
             UserSubscribed[consumer].count = UserSubscribed[consumer].SubList.length;
@@ -172,7 +170,7 @@ contract Storage is Admin {
             bytes32 h = list[info.count - 1 - i];
             Commit memory commit = _getCommit(h);
             if (commit.verifiedBlock != 0) {
-                commits[i] = CommitPool[h];
+                commits[i] = commit;
             }
         }
         return commits;
@@ -342,13 +340,11 @@ contract Storage is Admin {
         for (uint256 i = 0; i < CommiterCount; i++) {
             address commiter = Commiters[i];
             Unverified memory ulist = UserUnVerifiedCommits[commiter];
-            console.log("find commit for sub commiter is", commiter);
-	        console.log("ulist count",ulist.count);
+	        //console.log("ulist count",ulist.count);
 
             for (uint32 j = 0; j < ulist.count; j++) {
-        		console.logBytes32(ulist.CommitsList[j]);
+        		//console.logBytes32(ulist.CommitsList[j]);
                 Commit memory commit = CommitPool[ulist.CommitsList[j]];
-		        console.log("current commit block is ", commit.block);
                 if (commit.substatus == 0) {
                     return (true,commit);
                 }
@@ -367,8 +363,6 @@ contract Storage is Admin {
     }
     
     function subscribeCommit(address user,address consumer, bytes32 hash) public onlyCommiter {
-	    console.log("subscribe hash is");
-	    console.logBytes32(hash);
         _updateCommitSubscribe(user, consumer, hash);
     }
 
