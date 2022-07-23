@@ -104,6 +104,10 @@ contract Oracle is Admin {
         return store.getUserUnverifiedCommits(commiter);
     }
 
+    function getUserCommitsList(address commiter) public view returns (Commit [] memory) {
+        return store.getUserCommits(commiter);
+    }
+
     function getUserSubscribed(address consumer) public view returns (Commit [] memory) {
         return store.getUserSubscribedCommits(consumer);
     }
