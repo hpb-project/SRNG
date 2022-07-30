@@ -29,11 +29,6 @@ contract ComsumerExample {
     
     uint256 _nrandom;       // 用于存储随机数
 
-    // responseRandom 用于接收随机数, 使用 _nrandom 存储下来.
-    function responseRandom(bytes32 commit, bytes32 random) public returns (bool) {
-        oracle.commit(commit);
-        return true;
-    }
 
     // 合约业务逻辑，存储参与游戏的用户.
     address [] players;     
@@ -53,6 +48,8 @@ contract ComsumerExample {
     function endGame(bytes32 commit, bytes memory signature) public onlyOwner {
         bytes32 random = oracle.getRandom(commit, signature);
         _nrandom = uint256(random);
+	console.log("Consumer contract get random");
+	console.logBytes32(random);
         
         require(_nrandom != 0, "not got random");
         require(players.length > 0, "have no players");

@@ -242,6 +242,8 @@ async function doSubscribe(contractMap) {
     var receipt = await start.wait();
     sleep(duration);
     console.log("subscribe succeed", "tx hash", receipt.transactionHash);
+    contractMap.set("consumer", consumerContract);
+    return contractMap;
 }
 
 async function testCaclReward(contractMap) {
@@ -315,7 +317,7 @@ async function testCommitAndSubscribeAndReveal(contractMap) {
     console.log("commit succeed");
     sleep(duration);
 
-    await doSubscribe(contractMap);
+    contractMap = await doSubscribe(contractMap);
 
     var storage = contractMap.get("storage");
     var commit = await storage.getCommit(hash);
@@ -326,13 +328,15 @@ async function testCommitAndSubscribeAndReveal(contractMap) {
     console.log("reveal succeed");
 
     const accounts = await hre.ethers.getSigners();
-    console.log("accounts", accounts[0]);
     var signature = await accounts[0].signMessage(ethers.utils.arrayify(hash));
-    console.log("signature is ", signature);
 
     var rawSign = await hre.ethers.utils.joinSignature(signature);
     var r = await oracle.getRandom(hash, rawSign);
     console.log("got random is ", r);
+    var consumer = contractMap.get("consumer");
+    var endgame = await consumer.endGame(hash, rawSign);
+    await endgame.wait();
+    console.log("consumer end game succeed");
 }
 
 async function initialContract() {
