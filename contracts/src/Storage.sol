@@ -196,7 +196,7 @@ contract Storage is Admin {
         }
     }
 
-    function addNewCommit(address commiter, Commit memory commit) public {
+    function addNewCommit(address commiter, Commit memory commit) public onlyCommiter {
         bytes32 hash = commit.commit;
         require(checkExist(hash) == false, "commit already exist");
         _addToCommitPool(hash, commit);
@@ -294,7 +294,7 @@ contract Storage is Admin {
         _rmConsumerSubscribe(user, hash);
     }
 
-    function updateCommitVerified(address commiter, bytes32 hash, bytes32 seed) public {
+    function updateCommitVerified(address commiter, bytes32 hash, bytes32 seed) public onlyCommiter {
         Commit memory commit = CommitPool[hash];
         require(commit.block != 0, "commit not found");
         commit.seed = seed;

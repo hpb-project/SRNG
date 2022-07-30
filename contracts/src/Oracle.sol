@@ -6,6 +6,7 @@ import "../interface/IStorage.sol";
 import "../interface/IConsumerBase.sol";
 import "../interface/ICommitReveal.sol";
 import "../interface/IDepositPool.sol";
+import "../interface/IInterStore.sol";
 import "../common/Auth.sol";
 import "../common/Commit.sol";
 import "../interface/IStat.sol";
@@ -19,21 +20,22 @@ contract Oracle is Admin {
     ICommitReveal   commitReveal;
     IDepositPool 	tokenPool;
     IStat   stat;
+    IInternalStore internalstore;
     constructor() {
 		addAdmin(msg.sender);
 	}
 
-    function setting(address _token, address _config, address _deposit, address _store, address _commitReveal, address _stat) public onlyAdmin {
+    function setting(address _token, address _config, address _deposit, address _store, address _commitReveal, address _stat, address _internalstore) public onlyAdmin {
         hrgtoken = IERC20(_token);
         config = IConfig(_config);
         tokenPool = IDepositPool(_deposit);
         store = IStorage(_store);
         commitReveal = ICommitReveal(_commitReveal);
         stat = IStat(_stat);
+        internalstore = IInternalStore(_internalstore);
     }
 
-    // sender is user, consumer is contract address to use random.
-    function requestRandom(address user, address consumer) public returns (bool) {
+    function requestRandom(address user, address consumer, bytes32 token) public returns (bool) {
         bool find;
         Commit memory info;
         (find, info) = store.findCommit();
@@ -44,21 +46,41 @@ contract Oracle is Admin {
         require(hrgtoken.transferFrom(user, address(tokenPool), fee), "Oracle::Transfer fee failed");
 
         commitReveal.subScribeCommit(user, consumer, info.commit);
+        internalstore.addSubtoken(info.commit, token);
         emit Subscribe(consumer, info.author, info.commit, block.number, block.timestamp);
+        
         return true;
     }
+
     event Subscribe(address consumer, address commiter, bytes32 hash, uint256 block, uint256 time);
 
     function unsubscribeRandom(address consumer, bytes32 hash) public {
         Commit memory info = store.getCommit(hash);
         require(info.substatus == 1, "commit not subscribe");
+        require(info.consumer == msg.sender || info.subsender == msg.sender, "not consumer or author");
         uint256 unsubBlocks = config.getUnSubBlocks();
         require((info.subBlock + unsubBlocks) >= block.number, "out of unsub max blockx");
 
+
         commitReveal.unSubscribeCommit(consumer, hash);
+        internalstore.rmSubtoken(info.commit);
         emit UnSubscribe(consumer, info.author, hash, block.number, block.timestamp);
+        
     }
     event UnSubscribe(address consumer, address commiter, bytes32 hash, uint256 block, uint256 time);
+
+
+    function getRandom(bytes32 commit, bytes memory signature) public view returns (bytes32) {
+        address recoverd = recoverSigner(commit, signature);
+        Commit memory info = store.getCommit(commit);
+        require(recoverd == info.subsender || recoverd == info.consumer, "recover not match author and consumer");
+        require(msg.sender == info.subsender || msg.sender == info.consumer, "sender not match author and consumer");
+        require(info.seed != bytes32(0), "commit not reveald");
+        bytes32 token = internalstore.getSubtoken(commit);
+        bytes32 result = keccak256(abi.encodePacked(token, info.seed));
+        
+        return result;
+    }
 
 
     function commit(bytes32 hash) public {
@@ -76,16 +98,14 @@ contract Oracle is Admin {
     function reveal(bytes32 hash, bytes32 seed) public {
         bool consumed;
         Commit memory info;
-	console.log("goto call reveal");
         (consumed, info) = commitReveal.reveal(hash, seed, msg.sender);
-	console.log("after call reveal");
+
         emit RevealSeed(info.author, hash, seed, block.number, block.timestamp);
         if (consumed) {
-            bytes32 random = commitReveal.genRandom(info);
-            emit RandomConsumed(info.author, info.consumer, random, block.number, block.timestamp);
+            emit RandomConsumed(info.author, info.consumer, hash, block.number, block.timestamp);
         }
     }
-    event RandomConsumed(address commiter, address consumer, bytes32 random, uint256 block, uint256 time);
+    event RandomConsumed(address commiter, address consumer, bytes32 hash, uint256 block, uint256 time);
     event RevealSeed(address commiter, bytes32 hash, bytes32 seed, uint256 block, uint256 time);
 
     function getCommiterValidCount(address commiter) public view returns (uint256) {
@@ -114,5 +134,42 @@ contract Oracle is Admin {
 
     function getHash(bytes32 seed) public view returns (bytes32) {
         return commitReveal.getHash(seed);
+    }
+
+    function splitSignature(bytes memory sig)  internal  pure returns (uint8, bytes32, bytes32)    {
+        require(sig.length == 65);
+
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+
+        assembly {
+            // first 32 bytes, after the length prefix
+            r := mload(add(sig, 32))
+            // second 32 bytes
+            s := mload(add(sig, 64))
+            // final byte (first byte of the next 32 bytes)
+            v := byte(0, mload(add(sig, 96)))
+        }
+        if (v==0 || v==1) {
+            v = v+27;
+        }
+
+        return (v, r, s);
+    }
+
+    function toEthSignedMessageHash(bytes32 hash) internal pure returns (bytes32) {
+        return keccak256(
+        abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
+    }
+
+    function recoverSigner(bytes32 message, bytes memory sig) internal pure returns (address) {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+
+        (v, r, s) = splitSignature(sig);
+
+        return ecrecover(toEthSignedMessageHash(message), v, r, s);
     }
 }

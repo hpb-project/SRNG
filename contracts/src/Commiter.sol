@@ -79,11 +79,6 @@ contract CommitReveal is Admin {
 		if (info.consumer != address(0)) 
 		{
 			store.updateCommitConsumed(user, hash, seed);
-			
-			bytes32 random = genRandom(info);
-			IConsumerBase con = IConsumerBase(info.consumer);
-			con.responseRandom(info.commit, random);
-
 			consumed = true;
 
 			// reward consumer fee.
@@ -105,11 +100,6 @@ contract CommitReveal is Admin {
 
 	function getHash(bytes32 data) public view returns(bytes32) {
 		return keccak256(abi.encodePacked(address(this), data));
-	}
-
-	function genRandom(Commit memory info) public view returns(bytes32) {
-		bytes32 hash = blockhash(info.block);
-		return keccak256(abi.encodePacked(hash, info.seed));
 	}
 
 	function subScribeCommit(address user, address consumer, bytes32 hash) public onlyOracle {

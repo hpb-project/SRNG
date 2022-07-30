@@ -11,10 +11,12 @@ async function initDeploy() {
     const Stats = await hre.ethers.getContractFactory("Stats");
     const DepositPool = await hre.ethers.getContractFactory("DepositPool");
     const Commiter = await hre.ethers.getContractFactory("CommitReveal");
+    const InternalStore = await hre.ethers.getContractFactory("InternalStore");
 
     var token = await deploy_token(HRGToken);
     var oracle = await deploy_contract(Oracle, "Oracle");
     var commiter = await deploy_with_oracle(Commiter, oracle);
+    var internalStore = await deploy_with_oracle(InternalStore, oracle);
     var deposit = await deploy_deposit(DepositPool, token, commiter);
     var config = await deploy_contract(Config, "Config");
     var storage = await deploy_with_commiter(Storage, commiter);
@@ -26,6 +28,7 @@ async function initDeploy() {
     contractMap.set("deposit", deposit);
     contractMap.set("config", config);
     contractMap.set("storage", storage);
+    contractMap.set("internalstore", internalStore);
     contractMap.set("stats", stats);
     contractMap.set("commiter", commiter);
     contractMap.set("oracle", oracle);
@@ -46,18 +49,21 @@ function printinfo(contractMap) {
     var stats = contractMap.get("stats");
     var commiter = contractMap.get("commiter");
     var oracle = contractMap.get("oracle");
-    console.log("deploy token     at address", token.address);
-    console.log("deploy deposit   at address", deposit.address);
-    console.log("deploy config    at address", config.address);
-    console.log("deploy storage   at address", storage.address);
-    console.log("deploy stats     at address", stats.address);
-    console.log("deploy commiter  at address", commiter.address);
-    console.log("deploy oracle    at address", oracle.address);
+    var internalstore = contractMap.get("internalstore");
+    console.log("deploy token           at address", token.address);
+    console.log("deploy deposit         at address", deposit.address);
+    console.log("deploy config          at address", config.address);
+    console.log("deploy storage         at address", storage.address);
+    console.log("deploy stats           at address", stats.address);
+    console.log("deploy commiter        at address", commiter.address);
+    console.log("deploy internalstore   at address", internalstore.address);
+    console.log("deploy oracle          at address", oracle.address);
 }
 function sleep (time) {
     return ;
 	//   return new Promise((resolve) => setTimeout(resolve, time));
 }
+
 var duration = 6000;
 async function deploy_token(tokenFactory) {
     const token = await tokenFactory.deploy("100000000000000000000000000", "HRGToken", 18, "HRG");
@@ -107,11 +113,12 @@ async function setting(contractMap) {
     var stats = contractMap.get("stats");
     var commiter = contractMap.get("commiter");
     var oracle = contractMap.get("oracle");
+    var internalstore = contractMap.get("internalstore")
 
     var tx = await commiter.setAddress(token.address, config.address, deposit.address, stats.address, storage.address);
     await tx.wait();
     sleep(duration);
-    tx = await oracle.setting(token.address, config.address, deposit.address, storage.address, commiter.address, stats.address);
+    tx = await oracle.setting(token.address, config.address, deposit.address, storage.address, commiter.address, stats.address, internalstore.address);
     await tx.wait();
 
     sleep(duration);
@@ -224,13 +231,14 @@ async function doSubscribe(contractMap) {
     var oracle= contractMap.get("oracle");
     var token = contractMap.get("token");
     var deposit = contractMap.get("deposit");
+    var passwd = hre.ethers.utils.hashMessage("Hello World");
     const ConsumerExample = await hre.ethers.getContractFactory("ComsumerExample");
     const consumerContract = await ConsumerExample.deploy(oracle.address);
     await consumerContract.deployed();
     var fee = await config.getFee();
     var r = await token.approve(oracle.address,fee);
     await r.wait();
-    var start = await consumerContract.startNewGame();
+    var start = await consumerContract.startNewGame(passwd);
     var receipt = await start.wait();
     sleep(duration);
     console.log("subscribe succeed", "tx hash", receipt.transactionHash);
@@ -286,6 +294,47 @@ async function testCommitAndSubscribe(contractMap) {
     var commit = await storage.getCommit(hash);
     await doSubscribe(contractMap);
 }
+
+async function testCommitAndSubscribeAndReveal(contractMap) {
+    var token = contractMap.get("token");
+    var config = contractMap.get("config");
+    var oracle = contractMap.get("oracle");
+    var deposit = contractMap.get("deposit");
+
+    var depositAmount = await config.getDepositAmount();
+    var depositwei = web3.utils.toWei(depositAmount.toString(), 'wei').toString();
+    var t = await token.approve(oracle.address, depositwei);
+    await t.wait();
+
+    var seed = genrandom();
+    var hash = await oracle.getHash(seed);
+    console.log("hash is", hash,"seed is", seed);
+
+    var tx = await oracle.commit(hash);
+    await tx.wait();
+    console.log("commit succeed");
+    sleep(duration);
+
+    await doSubscribe(contractMap);
+
+    var storage = contractMap.get("storage");
+    var commit = await storage.getCommit(hash);
+
+    tx = await oracle.reveal(hash, seed, {gasLimit:10000000});
+    await tx.wait();
+    sleep(duration);
+    console.log("reveal succeed");
+
+    const accounts = await hre.ethers.getSigners();
+    console.log("accounts", accounts[0]);
+    var signature = await accounts[0].signMessage(ethers.utils.arrayify(hash));
+    console.log("signature is ", signature);
+
+    var rawSign = await hre.ethers.utils.joinSignature(signature);
+    var r = await oracle.getRandom(hash, rawSign);
+    console.log("got random is ", r);
+}
+
 async function initialContract() {
     var token     = "0xaB06f2bEd629106236dA27fdc41E90654aD75C09";
     var deposit   = "0xd834452287dcCF0cf40F14CF252E593bC9191a78";
@@ -352,25 +401,26 @@ async function getinfo(contractMap) {
 async function main() {
     var contracts = await initDeploy();
     await testsetting(contracts);
+    await testCommitAndSubscribeAndReveal(contracts);
     // var contracts = await initialContract();
     //await getconfig(contracts);
-    await testCommitAndReveal(contracts);
-    await testCommitAndReveal(contracts);
-    await testCommitAndReveal(contracts);
-    await testCommitAndReveal(contracts);
-    await testCommitAndReveal(contracts);
-    await testCommitAndReveal(contracts);
-    await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
     await testCommitAndReveal(contracts);
 
-    await testCommitAndSubscribe(contracts);
-    await testCommitAndSubscribe(contracts);
-    await testCommitAndSubscribe(contracts);
+    //await testCommitAndSubscribe(contracts);
+    //await testCommitAndSubscribe(contracts);
+    //await testCommitAndSubscribe(contracts);
     await testCommitAndSubscribe(contracts);
 
     //await testCommit(contracts);
-    await testCommit(contracts);
-    await testCommit(contracts);
+    //await testCommit(contracts);
+    //await testCommit(contracts);
     await testCommit(contracts);
     //await testCommit(contracts);
 
