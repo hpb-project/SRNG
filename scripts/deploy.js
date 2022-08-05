@@ -60,11 +60,11 @@ function printinfo(contractMap) {
     console.log("deploy oracle          at address", oracle.address);
 }
 function sleep (time) {
-    return ;
-	//   return new Promise((resolve) => setTimeout(resolve, time));
+//    return ;
+      return new Promise((resolve) => setTimeout(resolve, time));
 }
 
-var duration = 6000;
+var duration = 10000;
 async function deploy_token(tokenFactory) {
     const token = await tokenFactory.deploy("100000000000000000000000000", "HRGToken", 18, "HRG");
     await token.deployed();
@@ -334,27 +334,31 @@ async function testCommitAndSubscribeAndReveal(contractMap) {
     var r = await oracle.getRandom(hash, rawSign);
     console.log("got random is ", r);
     var consumer = contractMap.get("consumer");
+    var joingame = await consumer.joinGame();
+    await joingame.wait();
     var endgame = await consumer.endGame(hash, rawSign);
     await endgame.wait();
     console.log("consumer end game succeed");
 }
 
 async function initialContract() {
-    var token     = "0xaB06f2bEd629106236dA27fdc41E90654aD75C09";
-    var deposit   = "0xd834452287dcCF0cf40F14CF252E593bC9191a78";
-    var config    = "0x4E3aa47E2a6ac00918Bd819294eCe17235EfA986";
-    var storage   = "0xe1A2B42328B4a893291Cc73f2e34040A2bC851DD";
-    var stats     = "0xF5b4ae61493ddd81118D23d01670e362f0B369DA";
-    var commiter  = "0x5C679979d49a28cC6243CF511837c41219529410";
-    var oracle    = "0x800B5105b31bD100bE85E8646f86EA263aDB1786";
+//	deploy token           at address 0x95B3e4f53e2e30a87D5f420a4e4974CD5465f5Cc
+//	deploy deposit         at address 0xd5248755D8c2f057931252DA4d91C03ff3d53Fb3
+//	deploy config          at address 0x6265AEf966c05611122Bd274589c1a98801A4FdA
+//	deploy storage         at address 0x2501b7af5418B9F2A922F20217C854a880EBf23F
+//	deploy stats           at address 0x119d1ba67B07E643eE6D1142BF8dd868F8a5805C
+//	deploy commiter        at address 0x9463e35B6786f7e4b0F6E1ee2B6fCcd5eB6F53Ac
+//	deploy internalstore   at address 0xD5D3fbC3CDC89b851452F143a2E37E885e0c4415
+//	deploy oracle          at address 0xAb1E4324f4F85Dd2Bd1Ce029D43AF22427313887
+    var token     = "0x95B3e4f53e2e30a87D5f420a4e4974CD5465f5Cc";
+    var deposit   = "0xd5248755D8c2f057931252DA4d91C03ff3d53Fb3";
+    var config    = "0x6265AEf966c05611122Bd274589c1a98801A4FdA";
+    var storage   = "0x2501b7af5418B9F2A922F20217C854a880EBf23F";
+    var stats     = "0x119d1ba67B07E643eE6D1142BF8dd868F8a5805C";
+    var commiter  = "0x9463e35B6786f7e4b0F6E1ee2B6fCcd5eB6F53Ac";
+    var innerstore = "0xD5D3fbC3CDC89b851452F143a2E37E885e0c4415";
+    var oracle    = "0xAb1E4324f4F85Dd2Bd1Ce029D43AF22427313887";
 
-    //var token     = "0xe734DC898A3380e915f3C43A49418674d5CF83c8";
-    //var deposit   = "0x19E0376e240DfbBeD0b04D9397F7E70DB6810ecD";
-    //var config    = "0x6a47ca8064426091536bB20D87C049D0080D3aD1";
-    //var storage   = "0x9C067d3893c14c41CAa27040C6C5a28A235cd684";
-    //var stats     = "0x4429e38D2ec69e95C32D7B2D21C58d5d35869D77";
-    //var commiter  = "0x4670a5737f8d321a603d35e9A71f12D8D8D2C111";
-    //var oracle    = "0x9f23858bF809f9FF06960690A5Ecb49F22Ef1fAe";
     var contractMap = new Map();
 
     const HRGToken = await hre.ethers.getContractAt("HRGToken", token);
@@ -363,6 +367,7 @@ async function initialContract() {
     const Storage = await hre.ethers.getContractAt("Storage", storage);
     const Stats = await hre.ethers.getContractAt("Stats", stats);
     const DepositPool = await hre.ethers.getContractAt("DepositPool", deposit);
+    const InternalStore = await hre.ethers.getContractAt("InternalStore", innerstore);
     const Commiter = await hre.ethers.getContractAt("CommitReveal", commiter);
 
 
@@ -372,6 +377,7 @@ async function initialContract() {
     contractMap.set("storage", Storage);
     contractMap.set("stats", Stats);
     contractMap.set("commiter", Commiter);
+    contractMap.set("internalstore", internalStore);
     contractMap.set("oracle", Oracle);
     return contractMap;
 }
@@ -415,17 +421,17 @@ async function main() {
     //await testCommitAndReveal(contracts);
     //await testCommitAndReveal(contracts);
     //await testCommitAndReveal(contracts);
-    await testCommitAndReveal(contracts);
+    //await testCommitAndReveal(contracts);
 
     //await testCommitAndSubscribe(contracts);
     //await testCommitAndSubscribe(contracts);
     //await testCommitAndSubscribe(contracts);
-    await testCommitAndSubscribe(contracts);
+    //await testCommitAndSubscribe(contracts);
 
     //await testCommit(contracts);
     //await testCommit(contracts);
     //await testCommit(contracts);
-    await testCommit(contracts);
+    //await testCommit(contracts);
     //await testCommit(contracts);
 
     //await testCommitAndSubscribe(contracts);
@@ -438,7 +444,7 @@ async function main() {
     //await testCommitAndReveal(contracts);
 
     //await testCaclReward(contracts);
-    await getinfo(contracts);
+    //await getinfo(contracts);
     //await doSubscribe(contracts);
 }
 
