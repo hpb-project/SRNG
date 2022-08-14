@@ -26,6 +26,10 @@ contract Stats is Admin {
 		addAdmin(msg.sender);
 	}
 
+    function setAddress(address commiter) public onlyAdmin {
+        _commiter = commiter;
+    }
+
     function addUnVerified(address committer) public onlyCommiter returns (uint256) {
         unverifiedCommit[committer] = unverifiedCommit[committer] + 1;
         return unverifiedCommit[committer];

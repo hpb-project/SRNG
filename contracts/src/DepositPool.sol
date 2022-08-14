@@ -26,6 +26,10 @@ contract DepositPool is Admin {
 		addAdmin(msg.sender);
     }
 
+    function setAddress(address token, address _commiter) public onlyAdmin {
+        hrgToken = IERC20(token);
+        commiter = _commiter;
+    }
 
     function _calcReward(uint256 minted) internal view returns (uint256) {
         uint256 half = mintSupply/2;

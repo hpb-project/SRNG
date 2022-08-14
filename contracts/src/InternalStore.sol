@@ -15,6 +15,10 @@ contract InternalStore is Admin {
         _oracle = oracle;
 		addAdmin(msg.sender);
 	}
+    
+    function setAddress(address oracle) public onlyAdmin {
+        _oracle = oracle;
+    }
 
     function addSubtoken(bytes32 commit, bytes32 token) public onlyOracle returns (bool) {
         require(SuberToken[commit] == bytes32(0), "commit already exist");

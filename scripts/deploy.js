@@ -115,7 +115,7 @@ async function setting(contractMap) {
     var oracle = contractMap.get("oracle");
     var internalstore = contractMap.get("internalstore")
 
-    var tx = await commiter.setAddress(token.address, config.address, deposit.address, stats.address, storage.address);
+    var tx = await commiter.setAddress(oracle.address, token.address, config.address, deposit.address, stats.address, storage.address);
     await tx.wait();
     sleep(duration);
     tx = await oracle.setting(token.address, config.address, deposit.address, storage.address, commiter.address, stats.address, internalstore.address);

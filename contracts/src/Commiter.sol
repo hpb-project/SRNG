@@ -28,7 +28,8 @@ contract CommitReveal is Admin {
 		addAdmin(msg.sender);
 	}
 
-	function setAddress(address token, address _config, address _pool, address _stat, address _storage) public onlyAdmin {
+	function setAddress(address _oracle, address token, address _config, address _pool, address _stat, address _storage) public onlyAdmin {
+		oracle = _oracle;
 		hrgToken = IERC20(token);
 		config = IConfig(_config);
 		tokenPool = IDepositPool(_pool);

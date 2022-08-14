@@ -41,6 +41,10 @@ contract Storage is Admin {
         _commiter = commiter;
 		addAdmin(msg.sender);
 	}
+    
+    function setAddress(address commiter) public onlyAdmin {
+        _commiter = commiter;
+    }
 
     function _addConsumerSubscribe(address consumer, bytes32 hash) internal {
         if (UserSubscribed[consumer].exist) {
