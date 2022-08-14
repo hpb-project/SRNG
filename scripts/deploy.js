@@ -195,6 +195,23 @@ async function testCommit(contractMap) {
     var commit = await storage.getCommit(hash);
 }
 
+async function doReveal(contractMap, seed, hash) {
+    var token = contractMap.get("token");
+    var config = contractMap.get("config");
+    var oracle = contractMap.get("oracle");
+    var deposit = contractMap.get("deposit");
+
+    //var seed = "0xfc6577bc19f809e507627b2b3fd3450343122238aa6bb238fe2da5b13acbf695";
+    //var hash = "0x24d017b0953c33f78ef5715de507a0b087125c6bec8e8d6456148070adc403c0";
+    console.log("hash is", hash,"seed is", seed);
+
+
+    tx = await oracle.reveal(hash, seed, {gasLimit:10000000});
+    await tx.wait();
+    console.log("reveal succeed");
+
+}
+
 async function testCommitAndReveal(contractMap) {
     var token = contractMap.get("token");
     var config = contractMap.get("config");
@@ -377,7 +394,7 @@ async function initialContract() {
     contractMap.set("storage", Storage);
     contractMap.set("stats", Stats);
     contractMap.set("commiter", Commiter);
-    contractMap.set("internalstore", internalStore);
+    contractMap.set("internalstore", InternalStore);
     contractMap.set("oracle", Oracle);
     return contractMap;
 }
@@ -408,12 +425,22 @@ async function getinfo(contractMap) {
 	}
 }
 
+
 async function main() {
-    var contracts = await initDeploy();
-    await testsetting(contracts);
-    await testCommitAndSubscribeAndReveal(contracts);
-    // var contracts = await initialContract();
-    //await getconfig(contracts);
+    //var contracts = await initDeploy();
+    //await testsetting(contracts);
+    //await testCommitAndSubscribeAndReveal(contracts);
+    var contracts = await initialContract();
+    await getconfig(contracts);
+    // await doReveal(contracts, "0xfc6577bc19f809e507627b2b3fd3450343122238aa6bb238fe2da5b13acbf695", "0x24d017b0953c33f78ef5715de507a0b087125c6bec8e8d6456148070adc403c0");
+    // hash is 0xf01ff01332838ac4525fbcc2e8692aa53cec7544278676a484ee657971a8aa17 seed is 0x7d353a30fc066031c6bbac245bed91ce3612e089c36c379b6ce2d479ab8dcbdd
+    await doReveal(contracts, "0x7d353a30fc066031c6bbac245bed91ce3612e089c36c379b6ce2d479ab8dcbdd", "0xf01ff01332838ac4525fbcc2e8692aa53cec7544278676a484ee657971a8aa17");
+    for (let i = 0; i < 0; i++) {
+        await testCommit(contracts);
+        await testCommitAndReveal(contracts);
+        await testCommitAndSubscribe(contracts);
+        //await testCommitAndSubscribeAndReveal(contracts);
+    }
     //await testCommitAndReveal(contracts);
     //await testCommitAndReveal(contracts);
     //await testCommitAndReveal(contracts);
@@ -422,6 +449,7 @@ async function main() {
     //await testCommitAndReveal(contracts);
     //await testCommitAndReveal(contracts);
     //await testCommitAndReveal(contracts);
+    //await testCommitAndSubscribeAndReveal(contracts);
 
     //await testCommitAndSubscribe(contracts);
     //await testCommitAndSubscribe(contracts);
