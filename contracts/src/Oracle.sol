@@ -38,7 +38,7 @@ contract Oracle is Admin {
         bool find;
         Commit memory info;
         (find, info) = store.findCommit();
-        require(find == true, "Oracle::Not fund commit");
+        require(find == true, "Oracle::Not found commit");
         uint256 fee = config.getFee();
 	uint256 balance = hrgtoken.balanceOf(msg.sender);
 	require(balance >= fee, "Oracle::Not enough token for fee");
