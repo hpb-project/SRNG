@@ -90,15 +90,14 @@ async function getconfig(contractMap) {
 }
 
 async function initialContract() {
-	var token           = "0xecd36A108570F04cb2175d3D52A9653BA90557fc";
-	var deposit         = "0x2A386de23BE5CE7d2CF67bC56481b0851484CBa8";
-	var config          = "0x9A6A513d36903FBB7D5091fFD628E7831c726822";
-	var storage         = "0x89feB09786EB6B1861229EF12bb720C5928C566D";
-	var stats           = "0xAA7dD9820bB929dF883376C14E2E25CE44f139A1";
-	var commiter        = "0xcBeA23e62e3Eaa40312d8aB7fC7Cfb9353C0b343";
-	var internalstore   = "0x318bc7265d2D48BFe06ed098a8AB418C725BF8a5";
-	var oracle          = "0x6d21466DE46731Fe60a4B3d0E637f2b23b3EB991";
-	//var oracle          = "0xC64a38A3F84ec773F0c8F33C190FeB850F2b52d2";
+	var token           = "0xD5697fa93b21C12852c605c5b9c349585843642e";
+	var deposit         = "0xb6Ecf25762E204cFa46FA82E6103D8be611E33cA";
+	var config          = "0xF390aeCc5eb6778fdce4E80aD2188eCb09323718";
+	var storage         = "0x2017035CdB21481b0284964a4016A8e8aC093f5B";
+	var stats           = "0x43561681a4de8239b39882CE2CF81bb13725E5AF";
+	var commiter        = "0x975De39E6bc377da6011B44A2f94359787DA8Ca4";
+	var internalstore   = "0xF590B827E013Cc4A93c68B20a24F2422569ac79C";
+	var oracle          = "0x0301E0a55e43cC38762bcf6aC4C86F5F14B436F1";
 
     var contractMap = new Map();
 
