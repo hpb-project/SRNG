@@ -266,8 +266,7 @@ async function doSubscribe(contractMap) {
     await tx.wait();
     sleep(duration);
 
-    var passwd = hre.ethers.utils.hashMessage("Hello World");
-    var start = await consumerContract.startNewGame(passwd);
+    var start = await consumerContract.startNewGame();
     var receipt = await start.wait();
     sleep(duration);
     console.log("subscribe succeed", "tx hash", receipt.transactionHash);
@@ -377,19 +376,15 @@ async function testCommitAndSubscribeAndReveal(contractMap) {
     sleep(duration);
     console.log("reveal succeed");
 
-    const accounts = await hre.ethers.getSigners();
-    var signature = await accounts[0].signMessage(ethers.utils.arrayify(hash));
-
-    var rawSign = await hre.ethers.utils.joinSignature(signature);
     var r = await oracle.getRandom(hash);
-    //var r = await oracle.getRandom(hash, rawSign);
-    console.log("got random is ", r);
-    //var consumer = contractMap.get("consumer");
-    //var joingame = await consumer.joinGame();
-    //await joingame.wait();
-    //var endgame = await consumer.endGame(hash, rawSign);
-    //await endgame.wait();
-    //console.log("consumer end game succeed");
+    console.log("after reveal random is ", r);
+    var consumer = contractMap.get("consumer");
+    var joingame = await consumer.joinGame();
+    await joingame.wait();
+    var endgame = await consumer.endGame(hash);
+    await endgame.wait();
+    var gamerandom = await consumer.getrandom();
+    console.log("gamerandom is", gamerandom);
 }
 
 async function initialContract() {
@@ -489,7 +484,7 @@ async function updatesetting(contractMap) {
 async function main() {
     var contracts = await initDeploy();
     await testsetting(contracts);
-    //await testCommitAndSubscribeAndReveal(contracts);
+    await testCommitAndSubscribeAndReveal(contracts);
     //contracts = await updateOracle(contracts);
     //var contracts = await initialContract();
     //await getconfig(contracts);
