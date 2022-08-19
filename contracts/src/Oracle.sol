@@ -10,7 +10,6 @@ import "../interface/IInterStore.sol";
 import "../common/Auth.sol";
 import "../common/Commit.sol";
 import "../interface/IStat.sol";
-import "hardhat/console.sol";
 
 // oracle is use to receive all request and find random to consumer.
 contract Oracle is Admin {
@@ -41,9 +40,9 @@ contract Oracle is Admin {
         (find, info) = store.findCommit();
         require(find == true, "Oracle::Not fund commit");
         uint256 fee = config.getFee();
-		uint256 balance = hrgtoken.balanceOf(user);
-		require(balance >= fee, "Oracle::Not enough token for fee");
-        require(hrgtoken.transferFrom(user, address(tokenPool), fee), "Oracle::Transfer fee failed");
+	uint256 balance = hrgtoken.balanceOf(msg.sender);
+	require(balance >= fee, "Oracle::Not enough token for fee");
+        require(hrgtoken.transferFrom(msg.sender, address(tokenPool), fee), "Oracle::Transfer fee failed");
 
         commitReveal.subScribeCommit(user, consumer, info.commit);
         internalstore.addSubtoken(info.commit, token);
@@ -69,11 +68,8 @@ contract Oracle is Admin {
     }
     event UnSubscribe(address consumer, address commiter, bytes32 hash, uint256 block, uint256 time);
 
-
-    function getRandom(bytes32 commit, bytes memory signature) public view returns (bytes32) {
-        address recoverd = recoverSigner(commit, signature);
+    function getRandom(bytes32 commit) public view returns (bytes32) {
         Commit memory info = store.getCommit(commit);
-        require(recoverd == info.subsender || recoverd == info.consumer, "recover not match author and consumer");
         require(msg.sender == info.subsender || msg.sender == info.consumer, "sender not match author and consumer");
         require(info.seed != bytes32(0), "commit not reveald");
         bytes32 token = internalstore.getSubtoken(commit);
@@ -81,7 +77,6 @@ contract Oracle is Admin {
         
         return result;
     }
-
 
     function commit(bytes32 hash) public {
    		// deposit token.
