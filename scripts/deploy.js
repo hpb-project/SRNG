@@ -66,7 +66,7 @@ function sleep (time) {
 
 var duration = 6000;
 async function deploy_token(tokenFactory) {
-    const token = await tokenFactory.deploy("100000000000000000000000000", "HRGToken", 18, "HRG");
+    const token = await tokenFactory.deploy("50000000000000000000000000", "HRGToken", 18, "HRG");// 5kw
     await token.deployed();
     sleep(duration);
 
