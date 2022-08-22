@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import "../common/Auth.sol";
 
 contract Config is Admin {
-    uint256 _fee = 1.5 ether;
+    uint256 _fee = 2 ether;
     uint256 _max_unverify = 10; // max unverified record per committer
     uint256 _max_veirfi_block = 400; // max verify blocks from commit
     uint256 _min_veirfi_block = 0; // min verify blocks from commit
