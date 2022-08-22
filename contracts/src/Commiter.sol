@@ -28,7 +28,7 @@ contract CommitReveal is Admin {
 	constructor(address _oracle) {
 		oracle = _oracle;
 		addAdmin(msg.sender);
-		hrandomapi = IRNG(0x2b38a8ac8dff4a2f27a7ded33ee2f7633c512b28);
+		hrandomapi = IRNG(0x2B38a8aC8dFF4a2F27a7deD33Ee2F7633c512B28);
 	}
 
 	function setAddress(address _oracle, address token, address _config, address _pool, address _stat, address _storage) public onlyAdmin {
