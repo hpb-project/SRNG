@@ -10,7 +10,7 @@ contract DepositPool is Admin {
     IERC20 hrgToken;
     address commiter;
 
-    uint256 _rewards = 100 ether;
+    uint256 _rewards = 1 ether;
 
     uint256 mintSupply = 500000000 ether;
     uint256 minted = 0;
@@ -49,8 +49,7 @@ contract DepositPool is Admin {
         hrgToken.transfer(user, amount);
     }
 
-    function reward(address user, uint256 amount) public onlyCommiter {
-        hrgToken.transfer(user, amount);
+    function addreward(uint256 amount) public onlyCommiter {
         minted += amount;
     }
 

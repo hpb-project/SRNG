@@ -6,6 +6,7 @@ struct Commit {
     address     author;
     bytes32 	commit;
     uint256		block;  // commit block
+    bytes32     hrandom; // real random in block when commit.
 
     // fields for verify.
     bytes32		seed;   // verified seed.

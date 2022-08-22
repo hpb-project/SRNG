@@ -6,6 +6,7 @@ import "../interface/IConsumerBase.sol";
 import "../interface/IDepositPool.sol";
 import "../interface/IStat.sol";
 import "../interface/IStorage.sol";
+import "../interface/IRNG.sol";
 import "../common/Auth.sol";
 import "../common/Commit.sol";
 
@@ -16,6 +17,7 @@ contract CommitReveal is Admin {
 	IDepositPool 	tokenPool;
 	IStat  			stat;
 	IStorage        store;
+	IRNG    		hrandomapi;
 	address 		oracle;
 
 	modifier onlyOracle() {
@@ -26,6 +28,7 @@ contract CommitReveal is Admin {
 	constructor(address _oracle) {
 		oracle = _oracle;
 		addAdmin(msg.sender);
+		hrandomapi = IRNG(0x2b38a8ac8dff4a2f27a7ded33ee2f7633c512b28);
 	}
 
 	function setAddress(address _oracle, address token, address _config, address _pool, address _stat, address _storage) public onlyAdmin {
@@ -49,6 +52,7 @@ contract CommitReveal is Admin {
 		cmt.author = user;
 		cmt.commit = hash;
 		cmt.block = block.number;
+		cmt.hrandom = hrandomapi.getBlockRandom();
 		store.addNewCommit(user, cmt);
 
 		// add unverified
@@ -74,6 +78,7 @@ contract CommitReveal is Admin {
 
 		uint256 reward = tokenPool.getRewards();
 		hrgToken.mint(user, reward);
+		tokenPool.addreward(reward);
 		bool consumed;
 
 		// check consume.

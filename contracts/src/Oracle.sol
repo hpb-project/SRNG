@@ -24,7 +24,8 @@ contract Oracle is Admin {
 		addAdmin(msg.sender);
 	}
 
-    function setting(address _token, address _config, address _deposit, address _store, address _commitReveal, address _stat, address _internalstore) public onlyAdmin {
+    function setting(address _token, address _config, address _deposit, address _store,
+        address _commitReveal, address _stat, address _internalstore) public onlyAdmin {
         hrgtoken = IERC20(_token);
         config = IConfig(_config);
         tokenPool = IDepositPool(_deposit);
@@ -40,8 +41,8 @@ contract Oracle is Admin {
         (find, info) = store.findCommit();
         require(find == true, "Oracle::Not found commit");
         uint256 fee = config.getFee();
-	uint256 balance = hrgtoken.balanceOf(msg.sender);
-	require(balance >= fee, "Oracle::Not enough token for fee");
+	    uint256 balance = hrgtoken.balanceOf(msg.sender);
+	    require(balance >= fee, "Oracle::Not enough token for fee");
         require(hrgtoken.transferFrom(msg.sender, address(tokenPool), fee), "Oracle::Transfer fee failed");
 
         commitReveal.subScribeCommit(user, consumer, info.commit);
@@ -71,9 +72,18 @@ contract Oracle is Admin {
     function getRandom(bytes32 commit) public view returns (bytes32) {
         Commit memory info = store.getCommit(commit);
         require(msg.sender == info.subsender || msg.sender == info.consumer, "sender not match author and consumer");
-        require(info.seed != bytes32(0), "commit not reveald");
+        bytes32 seed = info.seed;
+        if(seed == bytes32(0)) {
+            // check commit reveal expire time out, then feed back hpb real random and reback fee.
+            if(block.number > info.block + config.getMaxVerifyBlocks()) {
+                // get hpb real random.
+                seed = info.hrandom;
+            } else {
+                require(false, "commit not reveald");
+            }
+        }
         bytes32 token = internalstore.getSubtoken(commit);
-        bytes32 result = keccak256(abi.encodePacked(token, info.seed));
+        bytes32 result = keccak256(abi.encodePacked(token, seed));
         
         return result;
     }
@@ -123,8 +133,8 @@ contract Oracle is Admin {
         return store.getUserCommits(commiter);
     }
 
-    function getUserSubscribed(address consumer) public view returns (Commit [] memory) {
-        return store.getUserSubscribedCommits(consumer);
+    function getUserSubscribed() public view returns (Commit [] memory) {
+        return store.getUserSubscribedCommits(msg.sender);
     }
 
     function getHash(bytes32 seed) public view returns (bytes32) {

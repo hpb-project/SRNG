@@ -3,17 +3,29 @@ pragma solidity ^0.8.0;
 import "../common/Auth.sol";
 
 contract Config is Admin {
-    uint256 _fee = 150 ether;
+    uint256 _fee = 1.5 ether;
     uint256 _max_unverify = 10; // max unverified record per committer
-    uint256 _max_veirfi_block = 1000; // max verify blocks from commit
+    uint256 _max_veirfi_block = 400; // max verify blocks from commit
     uint256 _min_veirfi_block = 0; // min verify blocks from commit
-    uint256 _deposit_amount = 100 ether;
+    uint256 _deposit_amount = 1 ether;
     uint256 _unsub_blocks = 200; // max block count from subscribe to unsubscribe.
+    address _oracle; // oracle contract address.
+
+    event updateoracle(address old, address newaddr);
     
     constructor() {
 		addAdmin(msg.sender);
 	}
+    
+    function setOracle(address neworacle) public onlyAdmin {
+        address old = _oracle;
+        _oracle = neworacle;
+        emit updateoracle(old, _oracle);
+    }
 
+    function getOracle() public view returns (address) {
+        return _oracle;
+    }    
 
     function setFee(uint256 newfee) public onlyAdmin {
         _fee = newfee;
