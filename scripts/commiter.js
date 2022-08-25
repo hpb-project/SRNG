@@ -48,9 +48,7 @@ async function CommitAndReveal() {
 }
 
 async function main() {
-  for (let i=0; i < 10; i++) {
     await CommitAndReveal();
-  }
 }
 
 // We recommend this pattern to be able to use async/await everywhere

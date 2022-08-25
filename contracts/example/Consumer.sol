@@ -5,6 +5,9 @@ interface IOracle {
     function requestRandom(address,address,bytes32) external returns (bool);
     function getRandom(bytes32) external view returns (bytes32);
 }
+interface IConfig {
+    function getOracle() external view returns (address);
+}
 
 interface IERC20 {
     function decimals() external view returns (uint8);
@@ -23,15 +26,15 @@ contract ComsumerExample {
         _;
     }
 
-    IOracle oracle = IOracle(0x0301E0a55e43cC38762bcf6aC4C86F5F14B436F1); // oracle contract address
-    IERC20 token = IERC20(0xD5697fa93b21C12852c605c5b9c349585843642e);  // hrg token contract address
-
+    IConfig config = IConfig(0xea8DE2853087D7425c669Dd1A37CEf8cC35710Ea);
+    IERC20 token = IERC20(0xF02F2575CfB182064477879165A684b895849f2D);  // hrg token contract address
+    
     constructor() {
-	    _owner = msg.sender;
+            _owner = msg.sender;
     }
 
-    function setting(address oracleAddr, address tokenAddr) public onlyOwner {
-        oracle = IOracle(oracleAddr);
+    function setting(address configaddr, address tokenAddr) public onlyOwner {
+        config = IConfig(configaddr);
         token = IERC20(tokenAddr);
     }
     
@@ -44,13 +47,15 @@ contract ComsumerExample {
         uint8 dec = token.decimals();
         uint256 towei = amount * 10 ** dec;
         require(token.balanceOf(address(this)) >= towei, "not enough token");
-        token.approve(address(oracle), towei);
+        address oracleaddr = config.getOracle();
+        token.approve(oracleaddr, towei);
     }
     
     // request a random.
     function startNewGame() public onlyOwner {
         bytes32 ringhash = keccak256(bytes("something"));
-        oracle.requestRandom(msg.sender, address(this), ringhash);
+        address oracleaddr = config.getOracle();
+        IOracle(oracleaddr).requestRandom(msg.sender, address(this), ringhash);
     }
 
     function joinGame() public {
@@ -58,9 +63,10 @@ contract ComsumerExample {
     }
 
     function endGame(bytes32 commit) public onlyOwner {
-        _random = oracle.getRandom(commit);
+        address oracleaddr = config.getOracle();
+        _random = IOracle(oracleaddr).getRandom(commit);
         uint256 _nrandom = uint256(_random);
-    	
+    
         require(_nrandom != 0, "not got random");
         require(players.length > 0, "have no players");
         uint32 wineridx = uint32(_nrandom% players.length);
