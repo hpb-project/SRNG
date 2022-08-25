@@ -13,9 +13,9 @@ function genrandom() {
 }
 
 async function CommitAndReveal() {
-  var token           = "0xc212057F863FB3633EdDf4a2fc1AdFc2bF5424E0";
-  var config          = "0x723d0c427885AB997d249E5DB8F19E4ee94FA2D1";
-  var oracle          = "0xf2FfB77d5fd72eBa74416Df747DD5CD3E0C9Bd36";
+  var token           = "0xF02F2575CfB182064477879165A684b895849f2D";
+  var config          = "0xea8DE2853087D7425c669Dd1A37CEf8cC35710Ea";
+  var oracle          = "0x386A2258AdFa29241863f3B7B55f9116cA7B22f6";
 
   const Token = await hre.ethers.getContractAt("HRGToken", token);
   const Config = await hre.ethers.getContractAt("Config", config);
