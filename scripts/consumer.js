@@ -1,5 +1,8 @@
 const hre = require("hardhat");
 
+function sleep (time) {
+	  return new Promise((resolve) => setTimeout(resolve, time));
+}
 async function deployConsumer() {
     const ConsumerExample = await hre.ethers.getContractFactory("ComsumerExample");
     const consumerContract = await ConsumerExample.deploy();
@@ -25,16 +28,19 @@ async function doSubscribe() {
     var fee = await Config.getFee();
     var tx = await Token.transfer(consumerContract.address, fee);
     await tx.wait();
+    console.log("transfer token to consumer contract finished");
     sleep(duration);
 
     tx = await consumerContract.approveToken(web3.utils.fromWei(fee.toString(), 'ether'));
     await tx.wait();
+    console.log("approve tokenfinished");
     sleep(duration);
 
     var start = await consumerContract.startNewGame();
     var receipt = await start.wait();
     sleep(duration);
     console.log("subscribe succeed", "tx hash", receipt.transactionHash);
+
 }
 
 async function main() {
