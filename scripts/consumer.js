@@ -8,30 +8,38 @@ async function deployConsumer() {
     return consumerContract;
 }
 
-async function doSubscribe(consumerContract) {
-    var deposit     = "0xd834452287dcCF0cf40F14CF252E593bC9191a78"; // deposit contract address on mainnet.
-    var tokenAddr   = "0xaB06f2bEd629106236dA27fdc41E90654aD75C09"; // hrgtoken contract address on mainnet.
-    var configAddr  = "0x4E3aa47E2a6ac00918Bd819294eCe17235EfA986"; // config contract address on mainnet.
 
-    const token = await hre.ethers.getContractAt("HRGToken", tokenAddr);
-    const config = await hre.ethers.getContractAt("Config", configAddr);
+async function doSubscribe() { 
+    var duration = 10000;
 
-    var fee = await config.getFee();
-    console.log("approve fee to deposit");
+    var token           = "0xc212057F863FB3633EdDf4a2fc1AdFc2bF5424E0";
+    var config          = "0x723d0c427885AB997d249E5DB8F19E4ee94FA2D1";
+    var oracle          = "0xf2FfB77d5fd72eBa74416Df747DD5CD3E0C9Bd36";
 
-    var r = await token.approve(deposit, fee);
-    await r.wait();
+    const Token = await hre.ethers.getContractAt("HRGToken", token);
+    const Config = await hre.ethers.getContractAt("Config", config);
+    const Oracle = await hre.ethers.getContractAt("Oracle", oracle);
+
+    const consumerContract = await deployConsumer();
+
+    // send token to new contract.
+    var fee = await Config.getFee();
+    var tx = await Token.transfer(consumerContract.address, fee);
+    await tx.wait();
+    sleep(duration);
+
+    tx = await consumerContract.approveToken(web3.utils.fromWei(fee.toString(), 'ether'));
+    await tx.wait();
+    sleep(duration);
 
     var start = await consumerContract.startNewGame();
-    await start.wait();
-    console.log("start game and subscribe succeed");
+    var receipt = await start.wait();
+    sleep(duration);
+    console.log("subscribe succeed", "tx hash", receipt.transactionHash);
 }
 
 async function main() {
-    var consumerContract = await deployConsumer();
-    for (let i=0; i < 10; i++) {
-		await doSubscribe(consumerContract);
-	}
+    await doSubscribe();
     console.log("deploy and subscribe finished");
 }
 
