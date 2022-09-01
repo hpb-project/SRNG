@@ -26,8 +26,8 @@ contract ComsumerExample {
         _;
     }
 
-    IConfig config = IConfig(0xea8DE2853087D7425c669Dd1A37CEf8cC35710Ea);
-    IERC20 token = IERC20(0xF02F2575CfB182064477879165A684b895849f2D);  // hrg token contract address
+    IConfig config = IConfig(0xD471aeE47025aa773594B4F0C3b3ebC16B7E7D1F);
+    IERC20 token = IERC20(0xB691d5FC540A8327D8D64Bf013309DE47AeF78dB);  // hrg token contract address
     
     constructor() {
             _owner = msg.sender;
