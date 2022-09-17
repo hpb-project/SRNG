@@ -101,7 +101,7 @@ async function initialContract() {
 	//var oracle          = "0x6747596001fc61e338b46F6e7D2e5fe21BdfFB25";
 
 	// v2
-	var token           = "0xe82Bcb6d75Ec304D2447B587Dee01A0D5aB25785";
+	var token           = "0xAf0dB00D59F31C8bD9eEff61F1D26EF82C5cDA15";
 	var deposit         = "0xc333eC47B7FAe00A881bF93C31b6042BD95683AD";
 	var config          = "0x62794Fb2C86CD5401bf2bcA327C2F178Ce1bda88";
 	var storage         = "0x373982ab0db385836BBEa0a42F7262925aA73C56";
