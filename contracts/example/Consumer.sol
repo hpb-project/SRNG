@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 interface IOracle {
-    function requestRandom(address,address,bytes32) external returns (bool);
+    function requestRandom(address,address,bytes32) external returns (bytes32);
     function getRandom(bytes32) external view returns (bytes32);
 }
 interface IConfig {
@@ -39,6 +39,7 @@ contract ComsumerExample {
     }
     
     bytes32 _random;
+    bytes32 _subcommit;
     address [] players;
     address winer;
 
@@ -55,16 +56,17 @@ contract ComsumerExample {
     function startNewGame() public onlyOwner {
         bytes32 ringhash = keccak256(bytes("something"));
         address oracleaddr = config.getOracle();
-        IOracle(oracleaddr).requestRandom(msg.sender, address(this), ringhash);
+        _subcommit = IOracle(oracleaddr).requestRandom(msg.sender, address(this), ringhash);
+        require(uint256(_subcommit)!=uint256(0), "request random empty");
     }
 
     function joinGame() public {
         players.push(msg.sender);
     }
 
-    function endGame(bytes32 commit) public onlyOwner {
+    function endGame() public onlyOwner {
         address oracleaddr = config.getOracle();
-        _random = IOracle(oracleaddr).getRandom(commit);
+        _random = IOracle(oracleaddr).getRandom(_subcommit);
         uint256 _nrandom = uint256(_random);
     
         require(_nrandom != 0, "not got random");
@@ -73,6 +75,7 @@ contract ComsumerExample {
         winer = players[wineridx];
 
     }
+    
     function getrandom() public view onlyOwner returns (bytes32) {
         return _random;
     }

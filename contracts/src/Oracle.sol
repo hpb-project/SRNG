@@ -35,7 +35,7 @@ contract Oracle is Admin {
         internalstore = IInternalStore(_internalstore);
     }
 
-    function requestRandom(address user, address consumer, bytes32 token) public returns (bool) {
+    function requestRandom(address user, address consumer, bytes32 token) public returns (bytes32) {
         bool find;
         Commit memory info;
         (find, info) = store.findCommit();
@@ -49,7 +49,7 @@ contract Oracle is Admin {
         internalstore.addSubtoken(info.commit, token);
         emit Subscribe(consumer, info.author, info.commit, block.number, block.timestamp);
         
-        return true;
+        return info.commit;
     }
 
     event Subscribe(address consumer, address commiter, bytes32 hash, uint256 block, uint256 time);
